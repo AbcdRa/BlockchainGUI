@@ -60,6 +60,15 @@ public class Blockchain {
         return utxo;
     }
 
+    public long getUTXO(String address) {
+        List<TransactionOutInfo> utxo = findUTXO(address);
+        long amount = 0;
+        for(TransactionOutInfo txInfo : utxo) {
+            amount += txInfo.getOutput().amount;
+        }
+        return amount;
+    }
+
     public boolean isSpent(TransactionOutInfo txOutInfo){
         String txId = txOutInfo.tx.base64Hash();
         for(int i=0; i < maxHeight; i++) {
@@ -77,7 +86,7 @@ public class Blockchain {
 
     public Block getBlock(long height) {
         if(height >= maxHeight) {
-            throw new RuntimeException("BLOCK NOT FOUND");
+            throw null;
         }
 
         String jsonBlock = CryptUtil.readStringFromFile(blockchainPath+"/"+defaultBlockName+height);

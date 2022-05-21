@@ -59,6 +59,11 @@ public class Transaction {
         hash = calculateHash();
     }
 
+    public boolean isCoinBase() {
+        if(inputs==null || inputs.length == 0) return true;
+        return false;
+    }
+
     private String putsToString(TxPut[] puts) {
         if(puts == null || puts.length==0) return "[]";
 

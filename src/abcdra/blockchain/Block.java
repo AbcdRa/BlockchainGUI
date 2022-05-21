@@ -44,6 +44,11 @@ public class Block {
         }
     }
 
+
+    public String takeMinerAddress() {
+        return transactions[0].outputs[0].address;
+    }
+
     public String toPartString() {
         String result = "";
         result += Base64.encodeBytes(pvHash) + "/";

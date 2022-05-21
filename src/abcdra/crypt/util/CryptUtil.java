@@ -6,10 +6,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -28,9 +25,8 @@ public class CryptUtil {
         }
     }
 
-
-    public static void writeStringToFile(String filepath, String text) {
-        try(FileWriter writer = new FileWriter(filepath, false))
+    public static void writeStringToFile(File file, String text) {
+        try(FileWriter writer = new FileWriter(file, false))
         {
             writer.write(text);
             writer.flush();
@@ -38,9 +34,12 @@ public class CryptUtil {
             throw new RuntimeException(e);
         }
     }
+    public static void writeStringToFile(String filepath, String text) {
+        writeStringToFile(new File(filepath), text);
+    }
 
-    public static String readStringFromFile(String filepath) {
-        try(BufferedReader reader = new BufferedReader( new FileReader(filepath))) {
+    public static String readStringFromFile(File file) {
+        try(BufferedReader reader = new BufferedReader( new FileReader(file))) {
             String line = null;
             StringBuilder stringBuilder = new StringBuilder();
             String ls = System.getProperty("line.separator");
@@ -54,6 +53,10 @@ public class CryptUtil {
             System.err.println("НЕ УДАЛОСЬ ПРОЧИТАТЬ ФАЙЛ");
             return null;
         }
+    }
+
+    public static String readStringFromFile(String filepath) {
+        return readStringFromFile(new File(filepath));
     }
 
 
