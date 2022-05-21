@@ -12,7 +12,7 @@ public class App {
         jFrame.setContentPane(new App().mainJPanel);
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jFrame.pack();
-        jFrame.setSize(200,300);
+        jFrame.setSize(500,500);
         jFrame.setVisible(true);
     }
 }
