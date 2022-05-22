@@ -1,5 +1,6 @@
 package abcdra.blockchain;
 
+import abcdra.app.NamedTransaction;
 import abcdra.crypt.util.CryptUtil;
 import abcdra.transaction.Transaction;
 import org.codehaus.jackson.JsonNode;
@@ -44,14 +45,29 @@ public class Blockchain {
         }
     }
 
+    public Transaction[] loadMempool() {
+        File[] txFiles = new File(memoryPoolPath).listFiles();
+        Transaction[] result = new Transaction[txFiles.length];
+        for(int i =0; i < txFiles.length; i++) {
+            result[i] = Transaction.fromJSON(CryptUtil.readStringFromFile(txFiles[i]));
+        }
+        return result;
+    }
+
+    public long getNextCoinBase() {
+        return Validator.getCoinbase(maxHeight);
+    }
+
     public List<TransactionOutInfo> findUTXO(String address) {
         List<TransactionOutInfo> utxo = new ArrayList<>();
         for(long i=0; i < maxHeight; i++) {
             Block b = getBlock(i);
             for(int j=0; j < b.transactions.length; j++) {
-                int outputN = b.transactions[j].findOutByAddress(address);
-                if (outputN != -1) {
-                    utxo.add(new TransactionOutInfo(b.transactions[j],outputN,i,j));
+                ArrayList<Integer> outs = b.transactions[j].findOutsByAddress(address);
+
+                if (outs.size() > 0) {
+                    for(int k=0; k < outs.size(); k++)
+                        utxo.add(new TransactionOutInfo(b.transactions[j],outs.get(k),i,j));
                 }
             }
         }
@@ -85,9 +101,18 @@ public class Blockchain {
         return false;
     }
 
+    public Block getLastBlock() {
+        return getBlock(maxHeight-1);
+    }
+
     public void addTransactionToMempool(Transaction tx) {
         CryptUtil.writeStringToFile(memoryPoolPath+"/tx_"+tx.base64Hash().substring(0,10),tx.toJSON());
     }
+
+
+//    //public Transaction getMempoolTxs() {
+//        throw new RuntimeException("NOT IMPLEMENTED");
+//    }
 
     public Block getBlock(long height) {
         if(height >= maxHeight) {
@@ -109,7 +134,11 @@ public class Blockchain {
     }
 
     public int calculateDiff() {
-        throw new RuntimeException("NOT IMPLEMENTED");
+        if(maxHeight%Configuration.DIFF_RECALCULATE_HEIGHT != 0) {
+            return getLastBlock().difficult;
+        }
+        throw new RuntimeException("NOT IMPLEMENTED CALCULATE DIFF");
+
     }
 
 }

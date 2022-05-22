@@ -1,18 +1,25 @@
 package abcdra.blockchain;
 
+import abcdra.transaction.TxInput;
+import abcdra.transaction.TxOutput;
+import com.starkbank.ellipticcurve.PublicKey;
+import com.starkbank.ellipticcurve.Signature;
 import com.starkbank.ellipticcurve.utils.Base64;
 import abcdra.crypt.util.CryptUtil;
+import com.starkbank.ellipticcurve.utils.ByteString;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.util.JSONWrappedObject;
-import org.codehaus.jackson.type.TypeReference;
+
 import abcdra.transaction.Transaction;
 
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class Block {
     public byte[] hash;
@@ -35,13 +42,20 @@ public class Block {
         merkleRoot = getMerkleRoot(transactions);
     }
 
-    public Block(Blockchain blockchain) {
-        Block lastBlock = blockchain.getBlock(blockchain.maxHeight-1);
+    public Block(Blockchain blockchain, String address, Transaction[] txs) {
+        Transaction[] wcbtxs = new Transaction[txs.length+1];
+
+        date = new Date();
+        Block lastBlock = blockchain.getLastBlock();
+        wcbtxs[0] = new Transaction(address, blockchain.getNextCoinBase(), txs, lastBlock.hash);
+        for(int i=1; i < wcbtxs.length; i++) {
+            wcbtxs[i] = txs[i-1];
+        }
+        transactions = wcbtxs;
         pvHash = lastBlock.hash;
         height = lastBlock.height + 1;
-        if(height%Configuration.DIFF_RECALCULATE_HEIGHT==0) {
-            difficult = blockchain.calculateDiff();
-        }
+        difficult = blockchain.calculateDiff();
+        merkleRoot = getMerkleRoot(wcbtxs);
     }
 
 
@@ -78,11 +92,45 @@ public class Block {
 
     public String toJSON() {
         ObjectMapper mapper = new ObjectMapper();
+        Map<String, String> txMap = new HashMap<>();
+        txMap.put("hash", Base64.encodeBytes(hash));
+        txMap.put("pvHash", Base64.encodeBytes(pvHash));
+        txMap.put("date", String.valueOf(date.getTime()));
+        txMap.put("merkleRoot", Base64.encodeBytes(merkleRoot));
+        txMap.put("difficult", String.valueOf(difficult));
+        txMap.put("nonce", String.valueOf(nonce));
+        txMap.put("height", String.valueOf(height));
+        for(int i =0; i< transactions.length; i++) {
+            txMap.put("t"+i, transactions[i].toJSON());
+        }
         try {
-            String json = mapper.writeValueAsString(this);
-            return json;
+            return mapper.writeValueAsString(txMap);
         } catch (IOException e) {
-            System.err.println("BLOCK -> JSON ERROR");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Block fromJSON(String json) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            JsonNode jsonNode = mapper.readValue(json, JsonNode.class);
+            Block restore = new Block();
+            restore.hash = Base64.decode(jsonNode.findValue("hash").asText());
+            restore.pvHash = Base64.decode(jsonNode.findValue("pvHash").asText());
+            restore.merkleRoot = Base64.decode(jsonNode.findValue("merkleRoot").asText());
+            ArrayList<Transaction> txs = new ArrayList<>();
+            for(int i = 0; jsonNode.has("t"+i); i++) {
+                txs.add(Transaction.fromJSON(jsonNode.findValue("t"+i).asText()));
+            }
+            Transaction[] transactions = new Transaction[txs.size()];
+            txs.toArray(transactions);
+            restore.transactions = transactions;
+            restore.date = new Date(jsonNode.findValue("date").asLong());
+            restore.difficult = jsonNode.findValue("difficult").asInt();
+            restore.height = jsonNode.findValue("height").asLong();
+            restore.nonce = jsonNode.findValue("nonce").asLong();
+            return restore;
+        } catch (IOException e ) {
             throw new RuntimeException(e);
         }
     }
@@ -94,27 +142,6 @@ public class Block {
         }
     }
 
-    public static Block fromJSON(String json) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            JsonNode jsonNode = mapper.readValue(json, JsonNode.class);
-            Block restore = new Block();
-            JsonNode txNode =  jsonNode.findValue("transactions");
-            Transaction[] txs = mapper.readValue(txNode, Transaction[].class);
-            restore.transactions = txs;
-            restore.hash = Base64.decode(jsonNode.findValue("hash").asText());
-            restore.pvHash = Base64.decode(jsonNode.findValue("pvHash").asText());
-            restore.nonce = jsonNode.findValue("nonce").asLong();
-            restore.merkleRoot = Base64.decode(jsonNode.findValue("merkleRoot").asText());
-            restore.height = jsonNode.findValue("height").asLong();
-            restore.difficult = jsonNode.findValue("difficult").asInt();
-            restore.date = new Date(jsonNode.findValue("date").asLong());
-            return  restore;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
 
 
     public static byte[][] partMerkleRoot(byte[][] transactions) {

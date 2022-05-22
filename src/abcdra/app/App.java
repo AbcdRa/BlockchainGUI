@@ -31,7 +31,6 @@ public class App {
     private JTextField tfAddress;
     private JTextField tfUTXO;
     private JButton bUpdateUTXO;
-    private JPanel JPBlockExplorer;
     private JPanel JPWallet;
     private JTextField tfblockN;
     private JButton bFindBlock;
@@ -60,13 +59,25 @@ public class App {
     private JButton bCreateTx;
     private JLabel lInputSum;
     private JLabel lOutputSum;
+    private JList listMempool;
+    private JList listBlockTx;
+    private JButton bAddTx;
+    private JButton bMineBlock;
+    private JButton bLoadMempool;
+    private JButton bRemoveTx;
+    private JLabel lBlockReward;
     private Wallet wallet;
     private Blockchain blockchain;
     private Transaction[] currentObserveTxs;
 
     public App() {
         blockchain = new Blockchain("src/blockchain_paths.json");
-        lCurrentHeight.setText(String.valueOf(blockchain.maxHeight));
+        if(blockchain.maxHeight == 0) {
+            Block genesis = new Block();
+            genesis.mineBlock();
+            blockchain.addBlock(genesis);
+        }
+
         bCreateWallet.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -150,21 +161,95 @@ public class App {
         bCreateTx.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                createTx();
+            }
+        });
+        bLoadMempool.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadMempool();
+            }
+        });
+        bAddTx.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fromMempoolToBlock();
+                updateBlockReward();
+            }
+        });
+        bRemoveTx.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fromBlockToMempool();
+                updateBlockReward();
+            }
+        });
+        bMineBlock.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(wallet == null) {
+                    JOptionPane.showMessageDialog(null,"НЕ СОЗДАН КОШЕЛЕК");
+                    return;
+                }
+                ArrayList<NamedTransaction> txs = getArrayFromJList(listBlockTx);
+                Transaction[] transactions = new Transaction[txs.size()];
+                for(int i =0; i < txs.size(); i++) {
+                    transactions[i] = txs.get(i).tx;
+                }
+                Block newBlock = new Block(blockchain, wallet.address, transactions);
+                newBlock.mineBlock();
+                blockchain.addBlock(newBlock);
+                JOptionPane.showMessageDialog(null,"Блок добавлен в блокчейн");
+                lCurrentHeight.setText(String.valueOf(blockchain.maxHeight));
             }
         });
     }
 
-    private void CreateTx() {
+    private void updateBlockReward() {
+        long reward = blockchain.getNextCoinBase();
+        ArrayList<NamedTransaction> txs = getArrayFromJList(listBlockTx);
+        for(NamedTransaction tx: txs) {
+            reward += tx.tx.calculateFee();
+        }
+        lBlockReward.setText(String.valueOf(reward));
+    }
+
+    private void fromBlockToMempool() {
+        if(listBlockTx.getSelectedIndex() == -1) return;
+        NamedTransaction selected = (NamedTransaction) listBlockTx.getSelectedValue();
+        removeToJList(listBlockTx, selected);
+        addToJList(listMempool, selected);
+    }
+
+    private void fromMempoolToBlock() {
+        if(listMempool.getSelectedIndex() == -1) return;
+        NamedTransaction selected = (NamedTransaction) listMempool.getSelectedValue();
+        removeToJList(listMempool, selected);
+        addToJList(listBlockTx, selected);
+    }
+
+    private void loadMempool() {
+        Transaction[] mempoolTxs = blockchain.loadMempool();
+        NamedTransaction[] wrappedTxs = new NamedTransaction[mempoolTxs.length];
+        for(int i = 0; i < wrappedTxs.length; i++) {
+            wrappedTxs[i] = new NamedTransaction(mempoolTxs[i]);
+        }
+        listMempool.setListData(wrappedTxs);
+    }
+
+    private void createTx() {
         PublicKey pk = wallet.getPk();
         Transaction tx = new Transaction();
         tx.pk = pk;
-        TransactionOutInfo[] raw_inputs = (TransactionOutInfo[]) getArrayFromJList(listTxInputs);
-        TxInput[] inputs = new TxInput[raw_inputs.length];
-        for(int i=0; i < raw_inputs.length; i++) {
-            inputs[i] = new TxInput(raw_inputs[i].getTxHash(), raw_inputs[i].outNum, raw_inputs[i].getOutput().amount);
+        ArrayList<TransactionOutInfo> raw_inputs = getArrayFromJList(listTxInputs);
+        TxInput[] inputs = new TxInput[raw_inputs.size()];
+        for(int i=0; i < raw_inputs.size(); i++) {
+            inputs[i] = new TxInput(raw_inputs.get(i).getTxHash(),
+                    raw_inputs.get(i).outNum, raw_inputs.get(i).getOutput().amount);
         }
-        TxOutput[] outputs = (TxOutput[]) getArrayFromJList(listTxOulputs);
+        ArrayList<TxOutput> raw_outputs = getArrayFromJList(listTxOulputs);
+        TxOutput[] outputs = new TxOutput[raw_outputs.size()];
+        raw_outputs.toArray(outputs);
         tx.inputs = inputs;
         tx.outputs = outputs;
         tx.date = new Date();
@@ -174,13 +259,14 @@ public class App {
 
     }
 
-    private static <T> Object[] getArrayFromJList(JList<T> jlist) {
+    private static <T> ArrayList<T> getArrayFromJList(JList<T> jlist) {
         ListModel<T> listModel = jlist.getModel();
         ArrayList<T> arrayList = new ArrayList<>(listModel.getSize());
         for(int i =0; i < listModel.getSize(); i++) {
-            arrayList.set(i, listModel.getElementAt(i));
+            arrayList.add(listModel.getElementAt(i));
         }
-        return arrayList.toArray();
+        //T[] result = new T[arrayList.size()];
+        return arrayList;
     }
 
     private void removeTxOutput() {
@@ -191,10 +277,15 @@ public class App {
     }
 
     private void addTxOutput() {
-        String address = JOptionPane.showInputDialog("Адрес получателя: ");
-        long amount = Long.parseLong(JOptionPane.showInputDialog("Кол-во: "));
-        addToJList(listTxOulputs, new TxOutput(address, amount));
-        updateTxInfo();
+        try {
+            String address = JOptionPane.showInputDialog("Адрес получателя: ");
+            long amount = Long.parseLong(JOptionPane.showInputDialog("Кол-во: "));
+            addToJList(listTxOulputs, new TxOutput(address, amount));
+            updateTxInfo();
+        } catch (Exception e) {
+            return;
+        }
+
     }
 
     private static <T> void addToJList(JList<T> jlist, T value ) {
