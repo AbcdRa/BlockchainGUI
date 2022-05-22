@@ -5,3 +5,6 @@ src/*.json
 src/*.ini
 src/abcdra/blockchain/blockchain/*
 src/abcdra/blockchain/mempool/*
+*.class
+.gitignore
+
