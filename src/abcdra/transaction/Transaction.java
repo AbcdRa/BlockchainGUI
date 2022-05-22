@@ -1,8 +1,11 @@
 package abcdra.transaction;
+import abcdra.blockchain.Blockchain;
 import com.starkbank.ellipticcurve.*;
 import com.starkbank.ellipticcurve.utils.Base64;
 import abcdra.crypt.util.CryptUtil;
+import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -19,6 +22,8 @@ public class Transaction {
     public byte[] pvBlockHash;
 
     public Date date;
+
+
 
     public int findOutByAddress(String address) {
         for(int i = 0; i < outputs.length; i++) {
@@ -58,6 +63,27 @@ public class Transaction {
         date = new Date();
         hash = calculateHash();
     }
+
+    public void updateHash() {
+        hash = calculateHash();
+    }
+
+    public void sign(PrivateKey sk) {
+        sign = Ecdsa.sign(toPartStringWithoutSign(), sk);
+        updateHash();
+    }
+
+    public String toJSON() {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String json = mapper.writeValueAsString(this);
+            return json;
+        } catch (IOException e) {
+            System.err.println("TX -> JSON ERROR");
+            throw new RuntimeException(e);
+        }
+    }
+
 
     public boolean isCoinBase() {
         if(inputs==null || inputs.length == 0) return true;
@@ -105,6 +131,18 @@ public class Transaction {
         partStr += "/";
         return  partStr;
     }
+    private String toPartStringWithoutSign() {
+        String partStr = pk == null ? "" : Base64.encodeBytes( pk.toByteString().getBytes());
+        partStr += "/";
+        partStr += putsToString(inputs) + "/";
+        partStr += putsToString(outputs) + "//";
+        partStr += date.getTime();
+        partStr += "/";
+        partStr += Base64.encodeBytes(pvBlockHash);
+        partStr += "/";
+        return  partStr;
+    }
+
 }
 
 

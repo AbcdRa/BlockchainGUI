@@ -24,6 +24,14 @@ public class Wallet {
     PublicKey pk;
     public String address;
 
+    public PrivateKey getSk() {
+        return sk;
+    }
+
+    public PublicKey getPk() {
+        return pk;
+    }
+
     public Wallet(PrivateKey sk) {
         this.sk = sk;
         pk = sk.publicKey();

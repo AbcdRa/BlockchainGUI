@@ -17,7 +17,14 @@ public class TransactionOutInfo {
         this.outNum = outNum;
     }
 
+    public String getTxHash() {
+        return Base64.encodeBytes(tx.hash);
+    }
 
+    @Override
+    public String toString() {
+        return Base64.encodeBytes(tx.hash).substring(0,10) + " : " + getOutput().amount;
+    }
 
     public TxOutput getOutput() {
         return tx.outputs[outNum];

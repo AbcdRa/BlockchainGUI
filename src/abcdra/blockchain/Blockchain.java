@@ -1,6 +1,7 @@
 package abcdra.blockchain;
 
 import abcdra.crypt.util.CryptUtil;
+import abcdra.transaction.Transaction;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import abcdra.transaction.TxInput;
@@ -82,6 +83,10 @@ public class Blockchain {
             }
         }
         return false;
+    }
+
+    public void addTransactionToMempool(Transaction tx) {
+        CryptUtil.writeStringToFile(memoryPoolPath+"/tx_"+tx.base64Hash().substring(0,10),tx.toJSON());
     }
 
     public Block getBlock(long height) {
