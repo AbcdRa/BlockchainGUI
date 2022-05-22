@@ -1,2 +1,7 @@
 ### IntelliJ IDEA ###
 .idea
+*.w
+src/*.json
+src/*.ini
+src/abcdra/blockchain/blockchain/*
+src/abcdra/blockchain/mempool/*

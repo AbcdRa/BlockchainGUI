@@ -1,12 +1,7 @@
 package abcdra.blockchain;
 
-import abcdra.transaction.TxInput;
-import abcdra.transaction.TxOutput;
-import com.starkbank.ellipticcurve.PublicKey;
-import com.starkbank.ellipticcurve.Signature;
 import com.starkbank.ellipticcurve.utils.Base64;
 import abcdra.crypt.util.CryptUtil;
-import com.starkbank.ellipticcurve.utils.ByteString;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -43,19 +38,17 @@ public class Block {
     }
 
     public Block(Blockchain blockchain, String address, Transaction[] txs) {
-        Transaction[] wcbtxs = new Transaction[txs.length+1];
+        Transaction[] transactionsWithCB = new Transaction[txs.length+1];
 
         date = new Date();
         Block lastBlock = blockchain.getLastBlock();
-        wcbtxs[0] = new Transaction(address, blockchain.getNextCoinBase(), txs, lastBlock.hash);
-        for(int i=1; i < wcbtxs.length; i++) {
-            wcbtxs[i] = txs[i-1];
-        }
-        transactions = wcbtxs;
+        transactionsWithCB[0] = new Transaction(address, blockchain.getNextCoinBase(), txs, lastBlock.hash);
+        System.arraycopy(txs, 0, transactionsWithCB, 1, transactionsWithCB.length - 1);
+        transactions = transactionsWithCB;
         pvHash = lastBlock.hash;
         height = lastBlock.height + 1;
         difficult = blockchain.calculateDiff();
-        merkleRoot = getMerkleRoot(wcbtxs);
+        merkleRoot = getMerkleRoot(transactionsWithCB);
     }
 
 
@@ -81,14 +74,6 @@ public class Block {
         hash = CryptUtil.getHash((currBlock+nonce).getBytes(StandardCharsets.UTF_8));
     }
 
-    public String transactionsToString() {
-        StringBuilder s = new StringBuilder("[");
-        for(Transaction tx: transactions) {
-            s.append(tx.toString());
-            s.append(", ");
-        }
-        return s.toString() + "]";
-    }
 
     public String toJSON() {
         ObjectMapper mapper = new ObjectMapper();
@@ -136,27 +121,19 @@ public class Block {
     }
 
 
-    public void addFeeTransactions() {
-        if(transactions.length > 1) {
-            throw new RuntimeException("NOT IMPLEMENTED");
-        }
-    }
-
-
-
     public static byte[][] partMerkleRoot(byte[][] transactions) {
         int N = (transactions.length+1)/2;
         byte[][] hashs = new byte[N][32];
         for(int i=0; i < N-1; i++) {
             byte[] summaryHash = new byte[64];
-            for (int j = 0; j < 32; j++) summaryHash[j] = transactions[2 * i][j];
+            System.arraycopy(transactions[2 * i], 0, summaryHash, 0, 32);
             for (int j = 32; j < 64; j++) summaryHash[j] = transactions[2 * i + 1][32 - j];
             hashs[i] = CryptUtil.getHash(summaryHash);
         }
         byte[] summaryHash = new byte[64];
-        for (int j = 0; j < 32; j++) summaryHash[j] = transactions[2*(N-1)][j];
-        if (transactions.length%2==1) for (int j = 0; j < 32; j++) summaryHash[j] = transactions[2*(N-1)][j];
-        else for (int j = 0; j < 32; j++) summaryHash[j] = transactions[2*(N-1)+1][j];
+        System.arraycopy(transactions[2 * (N - 1)], 0, summaryHash, 0, 32);
+        if (transactions.length%2==1) System.arraycopy(transactions[2 * (N - 1)], 0, summaryHash, 0, 32);
+        else System.arraycopy(transactions[2 * (N - 1) + 1], 0, summaryHash, 0, 32);
         hashs[N-1] = CryptUtil.getHash(summaryHash);
         return hashs;
     }
