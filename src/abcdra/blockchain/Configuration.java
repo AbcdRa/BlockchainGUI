@@ -6,9 +6,6 @@ public class Configuration {
     public static int INIT_DIFF = 20;
     public static long DIFF_RECALCULATE_HEIGHT = 1000;
     public static long AVERAGE_TIME_PER_BLOCK = 5*60*1000;
-    public static String DEFAULT_BLOCKCHAIN_PATH = "D:\\Projects\\Java\\Blockchain\\src\\blockchain\\blockchain";
-    public static String DEFAULT_MEMPOOL_PATH = "D:\\Projects\\Java\\Blockchain\\src\\blockchain\\mempool";
-    public static String DEFAULT_NODES_IP = "D:\\Projects\\Java\\Blockchain\\src\\blockchain\\otherNodeIp.ini";
-
+    //TODO Я забыл но тут что то ещё нужно будет
 
 }

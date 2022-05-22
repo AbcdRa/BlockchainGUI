@@ -3,7 +3,7 @@ package abcdra.app;
 import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
 import abcdra.blockchain.MiningUtil;
-import abcdra.blockchain.TransactionOutInfo;
+import abcdra.blockchain.TransactionInfo;
 import abcdra.transaction.Transaction;
 import abcdra.transaction.TxInput;
 import abcdra.transaction.TxOutput;
@@ -11,8 +11,6 @@ import abcdra.wallet.Wallet;
 import com.starkbank.ellipticcurve.PublicKey;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -24,6 +22,14 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class App {
+    //TODO Добавить NET модуль
+    //TODO Добавить Вкладку на изменение конфигов
+    //TODO При неудачном поиске конфига предложить найти самому
+    //TODO Вынести из этого класса побольше методов иначе уже перегружен
+    //TODO Исправить баг двойного добавления UTXO
+    //TODO Сделать удобную навигацию по блокам хотя бы вперед назад
+    //TODO Добавить возможность по двойному клику на вход найти начальный выход
+    //TODO Добавить возможность по двойному клику на выход найти потраченный вход
     private JPanel mainJPanel;
     private JButton bCreateWallet;
     private JButton bRestoreWallet;
@@ -31,8 +37,7 @@ public class App {
     private JTextField tfAddress;
     private JTextField tfUTXO;
     private JButton bUpdateUTXO;
-    private JPanel JPWallet;
-    private JTextField tfblockN;
+    private JTextField tfBlockN;
     private JButton bFindBlock;
     private JLabel lHash;
     private JLabel lCurrentHeight;
@@ -43,14 +48,13 @@ public class App {
     private JLabel lMerkleRoot;
     private JLabel lNonce;
     private JLabel lMinerAddress;
-    private JList listTxs;
-    private JList listInputs;
-    private JList listOuts;
+    private JList<NamedTransaction> listTxs;
+    private JList<TxInput> listInputs;
+    private JList<TxOutput> listOuts;
     private JButton bFindUTXO;
-    private JList listFindUTXO;
-    private JPanel jpTransaction;
-    private JList listTxInputs;
-    private JList listTxOulputs;
+    private JList<TransactionInfo> listFindUTXO;
+    private JList<TransactionInfo> listTxInputs;
+    private JList<TxOutput> listTxOutputs;
     private JLabel lFee;
     private JButton bAddOutput;
     private JButton bDeleteOutput;
@@ -59,16 +63,18 @@ public class App {
     private JButton bCreateTx;
     private JLabel lInputSum;
     private JLabel lOutputSum;
-    private JList listMempool;
-    private JList listBlockTx;
+    private JList<NamedTransaction> listMempool;
+    private JList<NamedTransaction> listBlockTx;
     private JButton bAddTx;
     private JButton bMineBlock;
     private JButton bLoadMempool;
     private JButton bRemoveTx;
     private JLabel lBlockReward;
+    private JButton bCreateSimpleTx;
+    private JLabel lResponse;
     private Wallet wallet;
-    private Blockchain blockchain;
-    private Transaction[] currentObserveTxs;
+    private final Blockchain blockchain;
+
 
     public App() {
         blockchain = new Blockchain("src/blockchain_paths.json");
@@ -77,37 +83,12 @@ public class App {
             genesis.mineBlock();
             blockchain.addBlock(genesis);
         }
-
-        bCreateWallet.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                createNewWallet();
-            }
-        });
-        bRestoreWallet.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                restoreWallet();
-            }
-        });
-        bUpdateUTXO.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateWalletInfo();
-            }
-        });
-        bSaveWallet.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveWallet();
-            }
-        });
-        bFindBlock.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                showBlock();
-            }
-        });
+        lCurrentHeight.setText(String.valueOf(blockchain.maxHeight));
+        bCreateWallet.addActionListener(e -> createNewWallet());
+        bRestoreWallet.addActionListener(e -> restoreWallet());
+        bUpdateUTXO.addActionListener(e -> updateWalletInfo());
+        bSaveWallet.addActionListener(e -> saveWallet());
+        bFindBlock.addActionListener(e -> showBlock());
         listTxs.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -115,92 +96,62 @@ public class App {
                 super.componentResized(e);
             }
         });
-        listTxs.addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                NamedTransaction selected = (NamedTransaction) listTxs.getSelectedValue();
-                Transaction currentTx = selected.tx;
-                if(currentTx.isCoinBase()) {
-                    listInputs.setListData(new String[]{"Созданы новые монеты"});
-                } else {
-                    listInputs.setListData(currentTx.inputs);
-                }
-                listOuts.setListData(currentTx.outputs);
+        listTxs.addListSelectionListener(e -> {
+            if(listTxs.getSelectedIndex() == -1) return;
+            NamedTransaction selected = listTxs.getSelectedValue();
+            Transaction currentTx = selected.tx;
+            if(currentTx.isCoinBase()) {
+                listInputs.setListData(new TxInput[]{new TxInput("Новые монеты",0,0)});
+            } else {
+                listInputs.setListData(currentTx.inputs);
             }
+            listOuts.setListData(currentTx.outputs);
         });
-        bFindUTXO.addActionListener(new ActionListener() {
+        bFindUTXO.addActionListener(e -> findUTXO());
+        bAddInput.addActionListener(e -> moveUTXOtoInput());
+        bDeleteInput.addActionListener(e -> moveInputToUTXO());
+        bAddOutput.addActionListener(e -> addTxOutput());
+        bDeleteOutput.addActionListener(e -> removeTxOutput());
+        bCreateTx.addActionListener(e -> createTx());
+        bLoadMempool.addActionListener(e -> loadMempool());
+        bAddTx.addActionListener(e -> {
+            fromMempoolToBlock();
+            updateBlockReward();
+        });
+        bRemoveTx.addActionListener(e -> {
+            fromBlockToMempool();
+            updateBlockReward();
+        });
+        bMineBlock.addActionListener(e -> {
+            if(wallet == null) {
+                JOptionPane.showMessageDialog(null,"НЕ СОЗДАН КОШЕЛЕК");
+                return;
+            }
+            ArrayList<NamedTransaction> txs = getArrayFromJList(listBlockTx);
+            Transaction[] transactions = new Transaction[txs.size()];
+            for(int i =0; i < txs.size(); i++) {
+                transactions[i] = txs.get(i).tx;
+            }
+            Block newBlock = new Block(blockchain, wallet.address, transactions);
+            newBlock.mineBlock();
+            String response = blockchain.addBlock(newBlock);
+            lResponse.setText(response);
+            if(response.equals("Added")) {
+                JOptionPane.showMessageDialog(null, "Блок добавлен в блокчейн");
+                updateWalletInfo();
+            }
+            lCurrentHeight.setText(String.valueOf(blockchain.maxHeight));
+        });
+        bCreateSimpleTx.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                findUTXO();
-            }
-        });
-        bAddInput.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addUTXOToInput();
-            }
-        });
-        bDeleteInput.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                removeUTXOToInput();
-            }
-        });
-        bAddOutput.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addTxOutput();
-            }
-        });
-        bDeleteOutput.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                removeTxOutput();
-            }
-        });
-        bCreateTx.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                createTx();
-            }
-        });
-        bLoadMempool.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                loadMempool();
-            }
-        });
-        bAddTx.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                fromMempoolToBlock();
-                updateBlockReward();
-            }
-        });
-        bRemoveTx.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                fromBlockToMempool();
-                updateBlockReward();
-            }
-        });
-        bMineBlock.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(wallet == null) {
-                    JOptionPane.showMessageDialog(null,"НЕ СОЗДАН КОШЕЛЕК");
-                    return;
-                }
-                ArrayList<NamedTransaction> txs = getArrayFromJList(listBlockTx);
-                Transaction[] transactions = new Transaction[txs.size()];
-                for(int i =0; i < txs.size(); i++) {
-                    transactions[i] = txs.get(i).tx;
-                }
-                Block newBlock = new Block(blockchain, wallet.address, transactions);
-                newBlock.mineBlock();
-                blockchain.addBlock(newBlock);
-                JOptionPane.showMessageDialog(null,"Блок добавлен в блокчейн");
-                lCurrentHeight.setText(String.valueOf(blockchain.maxHeight));
+                String address = JOptionPane.showInputDialog("Адрес: ");
+                long amount = Long.parseLong(JOptionPane.showInputDialog("Сумма: "));
+                long fee = Long.parseLong(JOptionPane.showInputDialog("Комиссия: "));
+                long inputSum = Long.parseLong(lInputSum.getText());
+                addToJList(listTxOutputs, new TxOutput(address, amount));
+                addToJList(listTxOutputs, new TxOutput(wallet.address, inputSum-amount-fee));
+                updateTxInfo();
             }
         });
     }
@@ -216,14 +167,14 @@ public class App {
 
     private void fromBlockToMempool() {
         if(listBlockTx.getSelectedIndex() == -1) return;
-        NamedTransaction selected = (NamedTransaction) listBlockTx.getSelectedValue();
+        NamedTransaction selected = listBlockTx.getSelectedValue();
         removeToJList(listBlockTx, selected);
         addToJList(listMempool, selected);
     }
 
     private void fromMempoolToBlock() {
         if(listMempool.getSelectedIndex() == -1) return;
-        NamedTransaction selected = (NamedTransaction) listMempool.getSelectedValue();
+        NamedTransaction selected = listMempool.getSelectedValue();
         removeToJList(listMempool, selected);
         addToJList(listBlockTx, selected);
     }
@@ -241,13 +192,13 @@ public class App {
         PublicKey pk = wallet.getPk();
         Transaction tx = new Transaction();
         tx.pk = pk;
-        ArrayList<TransactionOutInfo> raw_inputs = getArrayFromJList(listTxInputs);
+        ArrayList<TransactionInfo> raw_inputs = getArrayFromJList(listTxInputs);
         TxInput[] inputs = new TxInput[raw_inputs.size()];
         for(int i=0; i < raw_inputs.size(); i++) {
             inputs[i] = new TxInput(raw_inputs.get(i).getTxHash(),
                     raw_inputs.get(i).outNum, raw_inputs.get(i).getOutput().amount);
         }
-        ArrayList<TxOutput> raw_outputs = getArrayFromJList(listTxOulputs);
+        ArrayList<TxOutput> raw_outputs = getArrayFromJList(listTxOutputs);
         TxOutput[] outputs = new TxOutput[raw_outputs.size()];
         raw_outputs.toArray(outputs);
         tx.inputs = inputs;
@@ -259,8 +210,8 @@ public class App {
 
     }
 
-    private static <T> ArrayList<T> getArrayFromJList(JList<T> jlist) {
-        ListModel<T> listModel = jlist.getModel();
+    private static <T> ArrayList<T> getArrayFromJList(JList<T> jList) {
+        ListModel<T> listModel = jList.getModel();
         ArrayList<T> arrayList = new ArrayList<>(listModel.getSize());
         for(int i =0; i < listModel.getSize(); i++) {
             arrayList.add(listModel.getElementAt(i));
@@ -270,9 +221,9 @@ public class App {
     }
 
     private void removeTxOutput() {
-        if(listTxOulputs.getSelectedIndex() == -1 ) return;
-        TxOutput selected = (TxOutput) listTxOulputs.getSelectedValue();
-        removeToJList(listTxOulputs, selected);
+        if(listTxOutputs.getSelectedIndex() == -1 ) return;
+        TxOutput selected = listTxOutputs.getSelectedValue();
+        removeToJList(listTxOutputs, selected);
         updateTxInfo();
     }
 
@@ -280,22 +231,22 @@ public class App {
         try {
             String address = JOptionPane.showInputDialog("Адрес получателя: ");
             long amount = Long.parseLong(JOptionPane.showInputDialog("Кол-во: "));
-            addToJList(listTxOulputs, new TxOutput(address, amount));
+            addToJList(listTxOutputs, new TxOutput(address, amount));
             updateTxInfo();
-        } catch (Exception e) {
-            return;
+        } catch (Exception ignored) {
+
         }
 
     }
 
-    private static <T> void addToJList(JList<T> jlist, T value ) {
-        ListModel<T> model = jlist.getModel();
+    private static <T> void addToJList(JList<T> jList, T value ) {
+        ListModel<T> model = jList.getModel();
         java.util.List<T> new_model = new ArrayList<>();
         for(int i=0; i < model.getSize(); i++) {
             new_model.add(model.getElementAt(i));
         }
         new_model.add(value);
-        jlist.setListData((T[]) new_model.toArray());
+        jList.setListData((T[]) new_model.toArray());
     }
 
 
@@ -309,35 +260,22 @@ public class App {
         jlist.setListData((T[]) new_model.toArray());
     }
 
-    public void addUTXOToInput() {
+    public void moveUTXOtoInput() {
         if(listFindUTXO.getSelectedIndex() == -1) return;
-        ListModel<TransactionOutInfo> model = listFindUTXO.getModel();
-        java.util.List<TransactionOutInfo> new_model = new ArrayList<>();
-        for(int i =0; i < model.getSize(); i++) {
-            if(i != listFindUTXO.getSelectedIndex()) {
-                new_model.add(model.getElementAt(i));
-            }
-        }
-        ListModel<TransactionOutInfo> input_model = listTxInputs.getModel();
-        java.util.List<TransactionOutInfo> input_new_model = new ArrayList<>();
-        for(int i=0; i < input_model.getSize(); i++) {
-            input_new_model.add(input_model.getElementAt(i));
-        }
-        input_new_model.add(model.getElementAt(listFindUTXO.getSelectedIndex()));
-        listFindUTXO.setListData(new_model.toArray());
-
-        listTxInputs.setListData(input_new_model.toArray());
+        TransactionInfo selected = listFindUTXO.getSelectedValue();
+        removeToJList(listFindUTXO, selected);
+        addToJList(listTxInputs, selected);
         updateTxInfo();
     }
 
     public void updateTxInfo() {
-        ListModel<TransactionOutInfo> inputModel = listTxInputs.getModel();
+        ListModel<TransactionInfo> inputModel = listTxInputs.getModel();
         long sumInput = 0;
         for(int i =0; i < inputModel.getSize(); i++) {
             sumInput += inputModel.getElementAt(i).getOutput().amount;
         }
         long sumOutput = 0;
-        ListModel<TxOutput> outputModel = listTxOulputs.getModel();
+        ListModel<TxOutput> outputModel = listTxOutputs.getModel();
         for(int i =0; i < outputModel.getSize(); i++) {
             sumOutput += outputModel.getElementAt(i).amount;
         }
@@ -347,24 +285,11 @@ public class App {
         lFee.setText(String.valueOf(fee));
     }
 
-    public void removeUTXOToInput() {
+    public void moveInputToUTXO() {
         if(listTxInputs.getSelectedIndex() == -1 ) return;
-        ListModel<TransactionOutInfo> input_model = listTxInputs.getModel();
-        java.util.List<TransactionOutInfo> new_input_model = new ArrayList<>();
-        for(int i =0; i < input_model.getSize(); i++) {
-            if(i != listTxInputs.getSelectedIndex()) {
-                new_input_model.add(input_model.getElementAt(i));
-            }
-        }
-        ListModel<TransactionOutInfo> model = listFindUTXO.getModel();
-        java.util.List<TransactionOutInfo> new_model = new ArrayList<>();
-        for(int i=0; i < model.getSize(); i++) {
-            new_model.add(model.getElementAt(i));
-        }
-        new_model.add(input_model.getElementAt(listTxInputs.getSelectedIndex()));
-        listFindUTXO.setListData(new_model.toArray());
-
-        listTxInputs.setListData(new_input_model.toArray());
+        TransactionInfo selected = listTxInputs.getSelectedValue();
+        removeToJList(listTxInputs, selected);
+        addToJList(listFindUTXO, selected);
         updateTxInfo();
     }
 
@@ -373,20 +298,22 @@ public class App {
             JOptionPane.showMessageDialog(null, "Кошелек не создан!");
             return;
         }
-        java.util.List<TransactionOutInfo> utxo = blockchain.findUTXO(wallet.address);
+        java.util.List<TransactionInfo> utxo = blockchain.findUTXO(wallet.address);
         if(utxo.size() == 0) {
             JOptionPane.showMessageDialog(null, "UTXO не найдены!");
             return;
         }
-        listFindUTXO.setListData(utxo.toArray());
+        TransactionInfo[] raw_utxo = new TransactionInfo[utxo.size()];
+        utxo.toArray(raw_utxo);
+        listFindUTXO.setListData(raw_utxo);
     }
 
     public void showBlock() {
-        long i = 0;
+        long i;
         try {
-            i = Long.parseLong(tfblockN.getText());
+            i = Long.parseLong(tfBlockN.getText());
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(null, tfblockN.getText() + " - не число");
+            JOptionPane.showMessageDialog(null, tfBlockN.getText() + " - не число");
             return;
         }
         Block block = blockchain.getBlock(i);
@@ -401,7 +328,7 @@ public class App {
         lNonce.setText(String.valueOf(block.nonce));
         NamedTransaction[] namedTransactions = new NamedTransaction[block.transactions.length];
         for(int j=0; j < block.transactions.length; j++) {
-            namedTransactions[j] = new NamedTransaction(String.valueOf(j), block.transactions[j]);
+            namedTransactions[j] = new NamedTransaction(block.transactions[j]);
             //listTxs.add(txNames[j], block.transactions[j])
         }
         listTxs.setListData(namedTransactions);
@@ -416,6 +343,7 @@ public class App {
         JFileChooser fileChooser = new JFileChooser(app_dir);
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 "Wallet", "wallet", "w");
+        fileChooser.setFileFilter(filter);
         int response = fileChooser.showSaveDialog(null);
         if(JFileChooser.APPROVE_OPTION == response) {
             String pass = JOptionPane.showInputDialog("Введите пароль от кошелька");
@@ -460,7 +388,7 @@ public class App {
         jFrame.setContentPane(new App().mainJPanel);
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jFrame.pack();
-        jFrame.setSize(900,500);
+        jFrame.setSize(1200,500);
         jFrame.setVisible(true);
     }
 }

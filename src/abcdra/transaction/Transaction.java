@@ -1,6 +1,7 @@
 package abcdra.transaction;
 import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
+import abcdra.blockchain.MiningUtil;
 import com.starkbank.ellipticcurve.*;
 import com.starkbank.ellipticcurve.utils.Base64;
 import abcdra.crypt.util.CryptUtil;
@@ -27,7 +28,13 @@ public class Transaction {
 
     public Date date;
 
-
+    public static long getFee(Transaction[] txs) {
+        long fee = 0;
+        for(Transaction tx : txs) {
+            if(!tx.isCoinBase()) fee += tx.calculateFee();
+        }
+        return fee;
+    }
 
     public ArrayList<Integer> findOutsByAddress(String address) {
         ArrayList<Integer> outs = new ArrayList<>();
@@ -40,7 +47,7 @@ public class Transaction {
     public TxInput findInByTxHash(String hash, int n) {
         if(inputs == null) return null;
         for (int i = 0; i < inputs.length; i++) {
-            if(inputs[i].prevTx == hash && inputs[i].n == n) {
+            if(inputs[i].prevTx.equals(hash) && inputs[i].n == n) {
                 return inputs[i];
             }
         }
@@ -92,6 +99,14 @@ public class Transaction {
     public void sign(PrivateKey sk) {
         sign = Ecdsa.sign(toPartStringWithoutSign(), sk);
         updateHash();
+    }
+
+    public boolean verifySign() {
+        return Ecdsa.verify(toPartStringWithoutSign(), sign, pk);
+    }
+
+    public String toHEXHash() {
+        return MiningUtil.bytesToHex(hash);
     }
 
     public long calculateInputSum() {

@@ -67,10 +67,31 @@ public class Block {
         return  result;
     }
 
+    public boolean isComplete() {
+        return hash != null;
+    }
+
+    public TransactionInfo getTxById(String txId) {
+        for(int i=0; i < transactions.length; i++) {
+            Transaction tx = transactions[i];
+            if(tx.base64Hash().equals(txId)) return new TransactionInfo(tx, 0, 0, i);
+        }
+        return null;
+    }
+
     public void mineBlock() {
         String currBlock = toPartString();
         byte[] target = MiningUtil.getTarget(difficult);
-        nonce = MiningUtil.getNonce(currBlock, target);
+        boolean isMined = false;
+        while (!isMined) {
+            try {
+                nonce = MiningUtil.getNonce(currBlock, target);
+                isMined = true;
+            } catch (Exception e) {
+                date = new Date();
+                System.out.println("Перебраны все long");
+            }
+        }
         hash = CryptUtil.getHash((currBlock+nonce).getBytes(StandardCharsets.UTF_8));
     }
 

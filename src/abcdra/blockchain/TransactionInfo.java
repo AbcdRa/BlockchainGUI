@@ -5,12 +5,12 @@ import abcdra.transaction.Transaction;
 import abcdra.transaction.TxOutput;
 
 
-public class TransactionOutInfo {
+public class TransactionInfo {
     public long blockHeight;
     public int txN;
     public Transaction tx;
     public int outNum;
-    public TransactionOutInfo(Transaction tx, int outNum, long blockHeight, int txN) {
+    public TransactionInfo(Transaction tx, int outNum, long blockHeight, int txN) {
         this.tx = tx;
         this.blockHeight = blockHeight;
         this.txN = txN;
@@ -27,6 +27,7 @@ public class TransactionOutInfo {
     }
 
     public TxOutput getOutput() {
+        if(tx.outputs.length <= outNum) return null;
         return tx.outputs[outNum];
     }
 }
