@@ -148,7 +148,7 @@ public class Block {
         for(int i=0; i < N-1; i++) {
             byte[] summaryHash = new byte[64];
             System.arraycopy(transactions[2 * i], 0, summaryHash, 0, 32);
-            for (int j = 32; j < 64; j++) summaryHash[j] = transactions[2 * i + 1][32 - j];
+            System.arraycopy(transactions[2 * i + 1], 0, summaryHash, 32, 32);
             hashs[i] = CryptUtil.getHash(summaryHash);
         }
         byte[] summaryHash = new byte[64];

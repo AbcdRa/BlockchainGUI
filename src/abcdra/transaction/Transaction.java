@@ -25,6 +25,9 @@ public class Transaction {
 
     public Date date;
 
+    public static boolean equals(PublicKey pk1, PublicKey pk2) {
+        return pk1.toPem().equals(pk2.toPem());
+    }
     public boolean equals(Transaction oth) {
         updateHash();
         oth.updateHash();
@@ -32,7 +35,7 @@ public class Transaction {
         if(pk==null && oth.pk != null) return false;
         if(oth.pk == null && pk != null) return false;
         if(pk != null & oth.pk != null)
-            if(!pk.toByteString().equals(oth.pk.toByteString())) return false;
+            if(!equals(pk, oth.pk)) return false;
         if(inputs == null && oth.inputs != null) return false;
         if(oth.inputs == null && inputs != null) return false;
         if(inputs != null) {

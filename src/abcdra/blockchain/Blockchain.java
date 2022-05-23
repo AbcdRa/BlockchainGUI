@@ -23,7 +23,10 @@ public class Blockchain {
     //TODO Выгрузка из мемпула
     //TODO Выполнять быстрый поиск по файлам
 
-
+    public boolean isAdded(Transaction tx) {
+        TransactionInfo found = findTransactionById(tx.base64Hash());
+        return found!=null && tx.equals(found.tx);
+    }
 
     public Blockchain(String blockchainPath, String memoryPoolPath, String otherNodeIpFilePath) {
         this.blockchainPath = blockchainPath;
@@ -50,7 +53,19 @@ public class Blockchain {
         }
     }
 
+    public void cleanMempool() {
+        File[] txFiles = new File(memoryPoolPath).listFiles();
+        assert txFiles != null;
+
+        for(int i =0; i < txFiles.length; i++) {
+            Transaction tx = Transaction.fromJSON(CryptUtil.readStringFromFile(txFiles[i]));
+            if(isAdded(tx)) txFiles[i].delete();
+        }
+
+    }
+
     public Transaction[] loadMempool() {
+        cleanMempool();
         File[] txFiles = new File(memoryPoolPath).listFiles();
         assert txFiles != null;
         Transaction[] result = new Transaction[txFiles.length];
@@ -121,8 +136,11 @@ public class Blockchain {
         return getBlock(maxHeight-1);
     }
 
-    public void addTransactionToMempool(Transaction tx) {
+    public String addTransactionToMempool(Transaction tx) {
+        String response = Validator.validateMempoolAdd(tx, this);
+        if(!response.equals("OK")) return response;
         CryptUtil.writeStringToFile(memoryPoolPath+"/tx_"+tx.toHEXHash().substring(0,20),tx.toJSON());
+        return "Added";
     }
 
 

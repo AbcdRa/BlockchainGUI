@@ -10,10 +10,7 @@ import com.starkbank.ellipticcurve.PublicKey;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,30 +21,31 @@ public class App {
     //TODO При неудачном поиске конфига предложить найти самому
     //TODO Вынести из этого класса побольше методов иначе уже перегружен
     //TODO Исправить баг двойного добавления UTXO
-    //TODO Сделать удобную навигацию по блокам хотя бы вперед назад
     //TODO Добавить возможность по двойному клику на вход найти начальный выход
     //TODO Добавить возможность по двойному клику на выход найти потраченный вход
+    //TODO Добавить возможность добавить все транзакции из мемпула
+
     private JPanel mainJPanel;
-    private JButton bCreateWallet;
-    private JButton bRestoreWallet;
-    private JButton bSaveWallet;
-    private JTextField tfAddress;
-    private JTextField tfUTXO;
-    private JButton bUpdateUTXO;
-    private JTextField tfBlockN;
-    private JButton bFindBlock;
-    private JLabel lHash;
-    private JLabel lCurrentHeight;
-    private JLabel lPvHash;
-    private JLabel lDiff;
-    private JLabel lDate;
-    private JLabel lHeight;
-    private JLabel lMerkleRoot;
-    private JLabel lNonce;
-    private JLabel lMinerAddress;
-    private JList<NamedTransaction> listTxs;
-    private JList<TxInput> listInputs;
-    private JList<TxOutput> listOuts;
+    protected JButton bCreateWallet;
+    protected JButton bRestoreWallet;
+    protected JButton bSaveWallet;
+    protected JTextField tfAddress;
+    protected JTextField tfUTXO;
+    protected JButton bUpdateUTXO;
+    JTextField tfBlockN;
+    JButton bFindBlock;
+    JLabel lHash;
+    JLabel lCurrentHeight;
+    JLabel lPvHash;
+    JLabel lDiff;
+    JLabel lDate;
+    JLabel lHeight;
+    JLabel lMerkleRoot;
+    JLabel lNonce;
+    JLabel lMinerAddress;
+    JList<NamedTransaction> listTxs;
+    JList<TxInput> listInputs;
+    JList<TxOutput> listOuts;
     private JButton bFindUTXO;
     private JList<TransactionInfo> listFindUTXO;
     private JList<TransactionInfo> listTxInputs;
@@ -69,9 +67,9 @@ public class App {
     private JLabel lBlockReward;
     private JButton bCreateSimpleTx;
     private JLabel lResponse;
-    private Wallet wallet;
-    private final Blockchain blockchain;
-
+    final Blockchain blockchain;
+    private AppWallet appWallet;
+    private AppExplorer appExplorer;
 
     public App() {
         blockchain = new Blockchain("src/blockchain_paths.json");
@@ -80,30 +78,10 @@ public class App {
             genesis.mineBlock();
             blockchain.addBlock(genesis);
         }
-        lCurrentHeight.setText(String.valueOf(blockchain.maxHeight));
-        bCreateWallet.addActionListener(e -> createNewWallet());
-        bRestoreWallet.addActionListener(e -> restoreWallet());
-        bUpdateUTXO.addActionListener(e -> updateWalletInfo());
-        bSaveWallet.addActionListener(e -> saveWallet());
-        bFindBlock.addActionListener(e -> showBlock());
-        listTxs.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                System.out.println(e.getComponent());
-                super.componentResized(e);
-            }
-        });
-        listTxs.addListSelectionListener(e -> {
-            if(listTxs.getSelectedIndex() == -1) return;
-            NamedTransaction selected = listTxs.getSelectedValue();
-            Transaction currentTx = selected.tx;
-            if(currentTx.isCoinBase()) {
-                listInputs.setListData(new TxInput[]{new TxInput("Новые монеты",0,0)});
-            } else {
-                listInputs.setListData(currentTx.inputs);
-            }
-            listOuts.setListData(currentTx.outputs);
-        });
+
+        appWallet =  new AppWallet(this);
+        appExplorer = new AppExplorer(this);
+
         bFindUTXO.addActionListener(e -> findUTXO());
         bAddInput.addActionListener(e -> moveUTXOtoInput());
         bDeleteInput.addActionListener(e -> moveInputToUTXO());
@@ -120,7 +98,7 @@ public class App {
             updateBlockReward();
         });
         bMineBlock.addActionListener(e -> {
-            if(wallet == null) {
+            if(appWallet.wallet == null) {
                 JOptionPane.showMessageDialog(null,"НЕ СОЗДАН КОШЕЛЕК");
                 return;
             }
@@ -129,13 +107,13 @@ public class App {
             for(int i =0; i < txs.size(); i++) {
                 transactions[i] = txs.get(i).tx;
             }
-            Block newBlock = new Block(blockchain, wallet.address, transactions);
+            Block newBlock = new Block(blockchain, appWallet.wallet.address, transactions);
             newBlock.mineBlock();
             String response = blockchain.addBlock(newBlock);
             lResponse.setText(response);
             if(response.equals("Added")) {
                 JOptionPane.showMessageDialog(null, "Блок добавлен в блокчейн");
-                updateWalletInfo();
+                appWallet.updateWalletInfo();
             }
             lCurrentHeight.setText(String.valueOf(blockchain.maxHeight));
         });
@@ -147,10 +125,11 @@ public class App {
                 long fee = Long.parseLong(JOptionPane.showInputDialog("Комиссия: "));
                 long inputSum = Long.parseLong(lInputSum.getText());
                 addToJList(listTxOutputs, new TxOutput(address, amount));
-                addToJList(listTxOutputs, new TxOutput(wallet.address, inputSum-amount-fee));
+                addToJList(listTxOutputs, new TxOutput(appWallet.wallet.address, inputSum-amount-fee));
                 updateTxInfo();
             }
         });
+
     }
 
     private void updateBlockReward() {
@@ -186,7 +165,7 @@ public class App {
     }
 
     private void createTx() {
-        PublicKey pk = wallet.getPk();
+        PublicKey pk = appWallet.wallet.getPk();
         Transaction tx = new Transaction();
         tx.pk = pk;
         ArrayList<TransactionInfo> raw_inputs = getArrayFromJList(listTxInputs);
@@ -202,8 +181,9 @@ public class App {
         tx.outputs = outputs;
         tx.date = new Date();
         tx.pvBlockHash = blockchain.getBlock(blockchain.getCurrentHeight()-1).hash;
-        tx.sign(wallet.getSk());
-        blockchain.addTransactionToMempool(tx);
+        tx.sign(appWallet.wallet.getSk());
+        String response = blockchain.addTransactionToMempool(tx);
+        JOptionPane.showMessageDialog(null, response);
 
     }
 
@@ -291,11 +271,11 @@ public class App {
     }
 
     public void findUTXO() {
-        if(wallet==null) {
+        if(appWallet.wallet==null) {
             JOptionPane.showMessageDialog(null, "Кошелек не создан!");
             return;
         }
-        java.util.List<TransactionInfo> utxo = blockchain.findUTXO(wallet.address);
+        java.util.List<TransactionInfo> utxo = blockchain.findUTXO(appWallet.wallet.address);
         if(utxo.size() == 0) {
             JOptionPane.showMessageDialog(null, "UTXO не найдены!");
             return;
@@ -305,78 +285,6 @@ public class App {
         listFindUTXO.setListData(raw_utxo);
     }
 
-    public void showBlock() {
-        long i;
-        try {
-            i = Long.parseLong(tfBlockN.getText());
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(null, tfBlockN.getText() + " - не число");
-            return;
-        }
-        Block block = blockchain.getBlock(i);
-        lHash.setText(MiningUtil.bytesToHex(block.hash));
-        lPvHash.setText(MiningUtil.bytesToHex(block.pvHash));
-        lPvHash.setForeground(Color.blue);
-        lDiff.setText(String.valueOf(block.difficult));
-        lMerkleRoot.setText(MiningUtil.bytesToHex(block.merkleRoot));
-        lDate.setText(block.date.toString());
-        lMinerAddress.setText(block.takeMinerAddress());
-        lHeight.setText(String.valueOf(block.height));
-        lNonce.setText(String.valueOf(block.nonce));
-        NamedTransaction[] namedTransactions = new NamedTransaction[block.transactions.length];
-        for(int j=0; j < block.transactions.length; j++) {
-            namedTransactions[j] = new NamedTransaction(block.transactions[j]);
-            //listTxs.add(txNames[j], block.transactions[j])
-        }
-        listTxs.setListData(namedTransactions);
-
-    }
-    public void saveWallet(){
-        if(wallet == null) {
-            JOptionPane.showMessageDialog(null, "Кошелек не открыт!");
-            return;
-        }
-        String app_dir = System.getProperty("user.dir");
-        JFileChooser fileChooser = new JFileChooser(app_dir);
-        FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                "Wallet", "wallet", "w");
-        fileChooser.setFileFilter(filter);
-        int response = fileChooser.showSaveDialog(null);
-        if(JFileChooser.APPROVE_OPTION == response) {
-            String pass = JOptionPane.showInputDialog("Введите пароль от кошелька");
-            wallet.save(fileChooser.getSelectedFile(), pass);
-        }
-    }
-
-    public void createNewWallet() {
-        wallet = new Wallet();
-        updateWalletInfo();
-    }
-
-    public void restoreWallet() {
-        String app_dir = System.getProperty("user.dir");
-        JFileChooser fileChooser = new JFileChooser(app_dir);
-        FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                "Wallet", "wallet", "w");
-        fileChooser.setFileFilter(filter);
-        int result = fileChooser.showOpenDialog(null);
-        if(result != JFileChooser.APPROVE_OPTION) return;
-        File file = fileChooser.getSelectedFile();
-        String pass = JOptionPane.showInputDialog("Введите пароль от кошелька");
-        Wallet wallet = Wallet.restore(file, pass);
-        if(wallet == null) {
-            JOptionPane.showMessageDialog(null, "Не удалось восстановить кошелек");
-            return;
-        }
-        this.wallet = wallet;
-        updateWalletInfo();
-    }
-
-    public void updateWalletInfo() {
-        tfAddress.setText(wallet.address);
-        long utxo = blockchain.getUTXO(wallet.address);
-        tfUTXO.setText(String.valueOf(utxo));
-    }
 
     public static void main(String[] args) {
 
