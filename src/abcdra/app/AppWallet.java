@@ -8,7 +8,7 @@ import java.io.File;
 
 public class AppWallet {
     protected Wallet wallet;
-    private App app;
+    private final App app;
 
     public AppWallet(App app) {
         this.app =app;

@@ -26,6 +26,12 @@ public class CryptUtil {
     }
 
     public static void writeStringToFile(File file, String text) {
+        if(!file.exists()) try {
+            file.getParentFile().mkdir();
+            file.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         try(FileWriter writer = new FileWriter(file, false))
         {
             writer.write(text);

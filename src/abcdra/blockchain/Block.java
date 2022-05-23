@@ -32,7 +32,7 @@ public class Block {
         height = 0;
         date = new Date();
         transactions = new Transaction[]{
-                new Transaction("xht8ffw8KU2NSn1djJWaXdPSVSkXogLohvQNoMjsay4=",
+                new Transaction(Configuration.GENESIS_ADDRESS,
                 Configuration.INIT_COINBASE, pvHash)};
         merkleRoot = getMerkleRoot(transactions);
     }

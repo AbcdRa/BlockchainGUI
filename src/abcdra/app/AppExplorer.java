@@ -7,8 +7,6 @@ import abcdra.transaction.TxInput;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -83,7 +81,7 @@ public class AppExplorer {
             showBlock(i);
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(null, app.tfBlockN.getText() + " - не число");
-            return;
+
         }
     }
 }

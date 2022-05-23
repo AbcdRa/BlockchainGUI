@@ -33,24 +33,27 @@ public class Blockchain {
         this.memoryPoolPath = memoryPoolPath;
         this.otherNodeIpFilePath = otherNodeIpFilePath;
         maxHeight = getCurrentHeight();
-
     }
 
-    public Blockchain(String jsonConfigPath) {
+    public Blockchain(String jsonConfigPath) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         File jsonFile = new File(jsonConfigPath);
-        try {
-            JsonNode jsonNode = mapper.readValue(jsonFile, JsonNode.class);
-            String blockchainPath = jsonNode.findValue("BLOCKCHAIN_PATH").asText();
-            String memPoolPath = jsonNode.findValue("MEMPOOL_PATH").asText();
-            String ipNodePath = jsonNode.findPath("NODES_IP").asText();
-            this.blockchainPath = blockchainPath;
-            this.memoryPoolPath = memPoolPath;
-            this.otherNodeIpFilePath = ipNodePath;
+
+        JsonNode jsonNode = mapper.readValue(jsonFile, JsonNode.class);
+        String blockchainPath = jsonNode.findValue("BLOCKCHAIN_PATH").asText();
+        String memPoolPath = jsonNode.findValue("MEMPOOL_PATH").asText();
+        String ipNodePath = jsonNode.findPath("NODES_IP").asText();
+        this.blockchainPath = blockchainPath;
+        this.memoryPoolPath = memPoolPath;
+        this.otherNodeIpFilePath = ipNodePath;
+        maxHeight = getCurrentHeight();
+        if(maxHeight == 0) {
+            Block genesis = new Block();
+            genesis.mineBlock();
+            CryptUtil.writeStringToFile(blockchainPath+"/"+defaultBlockName+maxHeight,genesis.toJSON());
             maxHeight = getCurrentHeight();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
+
     }
 
     public void cleanMempool() {
@@ -166,7 +169,9 @@ public class Blockchain {
     }
 
     public long getCurrentHeight() {
-        return Objects.requireNonNull((new File(blockchainPath)).listFiles()).length;
+        File[] files = new File(blockchainPath).listFiles();
+        if(files==null) return 0;
+        return files.length;
     }
 
     public int calculateDiff() {
