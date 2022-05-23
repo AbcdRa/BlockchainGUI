@@ -59,6 +59,14 @@ public class Validator {
     }
 
     //TODO Проверка на добавление транзакции в мепул
+
+    public static String validateMempoolAdd(Transaction tx, Blockchain blockchain) {
+        String txId = tx.base64Hash();
+        TransactionInfo found = blockchain.findTransactionById(txId);
+        if(found != null && found.tx.equals(tx)) return "Tx is exist in blockchain";
+        return "OK";
+    }
+
     public static boolean validCoinBaseTx(Transaction tx, long height) {
         if(tx.inputs != null && tx.inputs.length > 0) return false;
         if(tx.pk != null) return false;

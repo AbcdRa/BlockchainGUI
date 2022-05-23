@@ -24,6 +24,7 @@ public class Blockchain {
     //TODO Выполнять быстрый поиск по файлам
 
 
+
     public Blockchain(String blockchainPath, String memoryPoolPath, String otherNodeIpFilePath) {
         this.blockchainPath = blockchainPath;
         this.memoryPoolPath = memoryPoolPath;

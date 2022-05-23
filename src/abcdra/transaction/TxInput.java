@@ -9,6 +9,10 @@ public class TxInput implements TxPut {
 
     }
 
+    public boolean equals(TxInput oth) {
+        return prevTx.equals(oth.prevTx) && (n == oth.n);
+    }
+
     public TxInput(String prevTx, int n, long amount) {
         this.prevTx = prevTx;
         this.n = n;

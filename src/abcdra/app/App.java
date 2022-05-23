@@ -1,9 +1,6 @@
 package abcdra.app;
 
-import abcdra.blockchain.Block;
-import abcdra.blockchain.Blockchain;
-import abcdra.blockchain.MiningUtil;
-import abcdra.blockchain.TransactionInfo;
+import abcdra.blockchain.*;
 import abcdra.transaction.Transaction;
 import abcdra.transaction.TxInput;
 import abcdra.transaction.TxOutput;
@@ -382,6 +379,8 @@ public class App {
     }
 
     public static void main(String[] args) {
+
+
         JFrame jFrame = new JFrame("Blockchain");
 
         JFrame.setDefaultLookAndFeelDecorated(true);

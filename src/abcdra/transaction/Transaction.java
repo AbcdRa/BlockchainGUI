@@ -1,6 +1,4 @@
 package abcdra.transaction;
-import abcdra.blockchain.Block;
-import abcdra.blockchain.Blockchain;
 import abcdra.blockchain.MiningUtil;
 import com.starkbank.ellipticcurve.*;
 import com.starkbank.ellipticcurve.utils.Base64;
@@ -10,7 +8,6 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
-import java.io.Writer;
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -27,6 +24,36 @@ public class Transaction {
     public byte[] pvBlockHash;
 
     public Date date;
+
+    public boolean equals(Transaction oth) {
+        updateHash();
+        oth.updateHash();
+        if(!base64Hash().equals(oth.base64Hash())) return false;
+        if(pk==null && oth.pk != null) return false;
+        if(oth.pk == null && pk != null) return false;
+        if(pk != null & oth.pk != null)
+            if(!pk.toByteString().equals(oth.pk.toByteString())) return false;
+        if(inputs == null && oth.inputs != null) return false;
+        if(oth.inputs == null && inputs != null) return false;
+        if(inputs != null) {
+            if (inputs.length != oth.inputs.length) return false;
+            for(int i=0; i < inputs.length; i++) {
+                if(!inputs[i].equals(oth.inputs[i])) return false;
+            }
+        }
+        if(!Base64.encodeBytes(pvBlockHash).equals(Base64.encodeBytes(oth.pvBlockHash))) return false;
+        if(outputs.length != oth.outputs.length) return false;
+
+        for (int i=0; i < outputs.length; i++) {
+            if(!outputs[i].equals(oth.outputs[i])) return false;
+        }
+        if(sign == null && oth.sign != null) return false;
+        if(oth.sign == null && sign != null) return false;
+        if(sign != null) {
+            if(!sign.toBase64().equals(oth.sign.toBase64())) return false;
+        }
+        return date.compareTo(oth.date) == 0;
+    }
 
     public static long getFee(Transaction[] txs) {
         long fee = 0;

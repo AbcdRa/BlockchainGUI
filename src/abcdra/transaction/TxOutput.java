@@ -8,6 +8,10 @@ public class TxOutput implements TxPut {
 
     }
 
+    public boolean equals(TxOutput oth) {
+        return address.equals(oth.address) && (amount == oth.amount);
+    }
+
     public TxOutput(String address, long amount) {
         this.address = address;
         this.amount = amount;
