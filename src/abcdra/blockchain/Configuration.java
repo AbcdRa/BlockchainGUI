@@ -9,6 +9,5 @@ public class Configuration {
     public static String GENESIS_ADDRESS = "xht8ffw8KU2NSn1djJWaXdPSVSkXogLohvQNoMjsay4=";
 
     public static int FORCE_FORK_LENGTH = 5;
-    //TODO Я забыл но тут что то ещё нужно будет
 
 }

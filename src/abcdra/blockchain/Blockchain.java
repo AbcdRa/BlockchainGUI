@@ -20,7 +20,6 @@ public class Blockchain {
 
     public long maxHeight;
 
-    //TODO Выгрузка из мемпула
     //TODO Выполнять быстрый поиск по файлам
 
     public boolean isAdded(Transaction tx) {

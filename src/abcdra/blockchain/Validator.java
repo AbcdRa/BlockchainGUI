@@ -67,7 +67,7 @@ public class Validator {
     }
 
     public static String validateTransactions(Transaction[] transactions, Blockchain blockchain) {
-        if(validCoinBaseTx(transactions[0], blockchain.maxHeight)) return "Invalid Coinbase Tx";
+        if(!validCoinBaseTx(transactions[0], blockchain.maxHeight)) return "Invalid Coinbase Tx";
         long fee = Transaction.getFee(transactions);
         if(fee == 0) {
             if(transactions[0].outputs.length != 1) return "extra fee outputs";
@@ -101,9 +101,8 @@ public class Validator {
     public static boolean validCoinBaseTx(Transaction tx, long height) {
         if(tx.inputs != null && tx.inputs.length > 0) return false;
         if(tx.pk != null) return false;
-        if(tx.outputs == null || tx.outputs.length != 1) return false;
-        if(tx.outputs[0].amount != getCoinbase(height)) return false;
-        return true;
+        if(tx.outputs == null || tx.outputs.length > 2) return false;
+        return tx.outputs[0].amount == getCoinbase(height);
     }
 
     public static long getCoinbase(long height) {

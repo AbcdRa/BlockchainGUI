@@ -8,6 +8,8 @@ import abcdra.transaction.TxInput;
 import abcdra.transaction.TxOutput;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
 import static abcdra.app.AppUtil.getArrayFromJList;
@@ -15,8 +17,6 @@ import static abcdra.app.AppUtil.getArrayFromJList;
 public class App {
     //TODO Добавить NET модуль
     //TODO Добавить Вкладку на изменение конфигов
-    //TODO При неудачном поиске конфига предложить найти самому
-    //TODO Вынести из этого класса побольше методов иначе уже перегружен
     //TODO Исправить баг двойного добавления UTXO
     //TODO Добавить возможность по двойному клику на вход найти начальный выход
     //TODO Добавить возможность по двойному клику на выход найти потраченный вход
@@ -64,6 +64,8 @@ public class App {
     private JLabel lBlockReward;
     JButton bCreateSimpleTx;
     private JLabel lResponse;
+    private JButton bRunServer;
+    private JButton bSyncronize;
     final Blockchain blockchain;
     protected final AppWallet appWallet;
     protected final AppExplorer appExplorer;
@@ -113,7 +115,15 @@ public class App {
         });
 
 
+        bRunServer.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Net.runServer();
+            }
+        });
     }
+
+
 
     private void updateBlockReward() {
         long reward = blockchain.getNextCoinBase();

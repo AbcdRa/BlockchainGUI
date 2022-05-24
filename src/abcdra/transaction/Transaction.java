@@ -223,8 +223,7 @@ public class Transaction {
 
 
     public boolean isCoinBase() {
-        if(inputs==null || inputs.length == 0) return true;
-        return false;
+        return inputs == null || inputs.length == 0;
     }
 
     private String putsToString(TxPut[] puts) {
