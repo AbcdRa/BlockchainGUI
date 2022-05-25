@@ -3,6 +3,7 @@ package abcdra.app;
 import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
 import abcdra.blockchain.TransactionInfo;
+import abcdra.net.ComplexData;
 import abcdra.net.JLogger;
 import abcdra.net.client.NodeClient;
 import abcdra.net.server.NodeServer;
@@ -14,6 +15,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.concurrent.Exchanger;
 
 import static abcdra.app.AppUtil.getArrayFromJList;
 
@@ -84,6 +86,10 @@ public class App {
     protected NodeServer nodeServer;
     protected AppMiner appMiner;
 
+    protected Exchanger<ComplexData> exchanger;
+
+
+
     public App() {
         blockchain = AppConfig.safeBlockchainInit();
         if(blockchain.maxHeight == 0) {
@@ -91,9 +97,10 @@ public class App {
             genesis.mineBlock();
             blockchain.addBlock(genesis);
         }
+       exchanger = new Exchanger<>();
 
         nodeServer = new NodeServer(blockchain, new JLogger(tpServerLog));
-        nodeClient = new NodeClient(blockchain, new JLogger(tpClientLog));
+        nodeClient = new NodeClient(blockchain, new JLogger(tpClientLog), exchanger);
 
         appWallet =  new AppWallet(this);
         appExplorer = new AppExplorer(this);

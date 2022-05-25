@@ -2,40 +2,32 @@ package abcdra.net.client;
 
 import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
+import abcdra.net.ComplexData;
 import abcdra.net.JLogger;
 import abcdra.net.NodeThread;
 import abcdra.transaction.Transaction;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import javax.swing.*;
 import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.Exchanger;
 
 //TODO NodeServerThread и NodeThread похожи можно их наследовать от одного предка
 public class NodeServerThread extends NodeThread {
     private Blockchain blockchain;
     private boolean isInitSynchronized = false;
-    private Block bufferBlock;
-    private Transaction bufferTx;
 
-    public void setBufferBlock(Block block) {
-        if(block != null) {
-            bufferBlock = block;
-        }
-    }
+    public Exchanger<ComplexData> exchanger;
 
-    public void setBufferTx(Transaction tx) {
-        if(tx!=null){
-            bufferTx = tx;
-        }
-    }
 
     JLogger logger;
 
-    public NodeServerThread(Socket socket, Blockchain blockchain, JLogger logger) {
+    public NodeServerThread(Socket socket, Blockchain blockchain, JLogger logger,
+                            Exchanger<ComplexData> exchanger) {
         super(socket);
         this.logger = logger;
         this.blockchain = blockchain;
+        this.exchanger = exchanger;
     }
 
 
@@ -84,6 +76,7 @@ public class NodeServerThread extends NodeThread {
     private String sendBlock(Block block) {
         try {
             send("POST BLOCK "+block.toJSON());
+            logger.write("POST TX " + block);
             String response = inBR.readLine();
             return response;
         } catch (IOException e) {
@@ -95,6 +88,7 @@ public class NodeServerThread extends NodeThread {
     private String sendTx(Transaction tx) {
         try {
             send("POST TX "+tx.toJSON());
+            logger.write("POST TX " + tx.toJSON());
             String response = inBR.readLine();
             return response;
         } catch (IOException e) {
@@ -116,14 +110,14 @@ public class NodeServerThread extends NodeThread {
     }
 
     public void sendBuffers() {
-        if(bufferBlock!=null) {
-            String response = sendBlock(bufferBlock);
-            if(response.equals("OK")) bufferBlock = null;
+        try {
+            ComplexData data = exchanger.exchange(null);
+            if(data.isBlock) sendBlock(data.block);
+            else sendTx(data.tx);
+        } catch (InterruptedException e) {
+
         }
-        if(bufferTx!=null) {
-            String response = sendTx(bufferTx);
-            if(response.equals("OK")) bufferTx = null;
-        }
+
     }
 
     @Override
@@ -131,9 +125,12 @@ public class NodeServerThread extends NodeThread {
         while (isOnline) {
             try {
                 if(!isInitSynchronized) initSync();
+                sleep(2000);
                 sendBuffers();
             } catch (IOException e) {
                 isOnline = false;
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
     }

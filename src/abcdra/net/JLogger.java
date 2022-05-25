@@ -19,7 +19,7 @@ public class JLogger {
         this.textPane = textPane;
         this.document = textPane.getDocument();
         this.isAppend = true;
-        this.limit = 1000;
+        this.limit = 3000;
         this.attributeSet = new SimpleAttributeSet();
         textPane.setEditable( false );
     }

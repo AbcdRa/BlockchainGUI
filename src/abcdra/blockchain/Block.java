@@ -26,6 +26,11 @@ public class Block {
     public long nonce;
     public Date date;
 
+    @Override
+    public String toString() {
+        return MiningUtil.bytesToHex(hash);
+    }
+
     public Block() {
         pvHash = new byte[32];
         difficult = Configuration.INIT_DIFF;

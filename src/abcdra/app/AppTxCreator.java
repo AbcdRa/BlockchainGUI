@@ -1,6 +1,7 @@
 package abcdra.app;
 
 import abcdra.blockchain.TransactionInfo;
+import abcdra.net.ComplexData;
 import abcdra.transaction.Transaction;
 import abcdra.transaction.TxInput;
 import abcdra.transaction.TxOutput;
@@ -9,6 +10,8 @@ import com.starkbank.ellipticcurve.PublicKey;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static abcdra.app.AppUtil.*;
 
@@ -123,7 +126,8 @@ public class AppTxCreator {
         tx.pvBlockHash = app.blockchain.getBlock(app.blockchain.getCurrentHeight()-1).hash;
         tx.sign(app.appWallet.wallet.getSk());
         String response = app.blockchain.addTransactionToMempool(tx);
-        if(response.equals("Added")) app.nodeClient.setBufferTx(tx);
+        if(response.equals("Added")) try {app.exchanger.exchange(new ComplexData(tx), 0, TimeUnit.SECONDS);} catch (
+                InterruptedException | TimeoutException e) {}
         JOptionPane.showMessageDialog(null, response);
     }
 

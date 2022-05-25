@@ -31,7 +31,7 @@ public class NodeClientThread extends NodeThread {
                 String command = inBR.readLine();
                 String response = responseCommand(command);
                 Thread.sleep(delay);
-                if(response != null) {
+                if(response != null && !response.equals("NULL")) {
                     send(response);
                 }
             } catch (IOException e) {
@@ -44,6 +44,10 @@ public class NodeClientThread extends NodeThread {
     }
 
     private String responseCommand(String command) {
+        if(command==null) {
+            isOnline = false;
+            return "NULL";
+        }
         if(command.equals("GET HEIGHT")) {
             return String.valueOf(blockchain.maxHeight);
         }
@@ -58,14 +62,16 @@ public class NodeClientThread extends NodeThread {
         }
         if(command.startsWith("POST TX ")) {
             String rawTx = command.substring(8);
-            logger.write("Получена транзакция " + rawTx);
-            blockchain.addTransactionToMempool(Transaction.fromJSON(rawTx));
+            logger.write("Получена транзакция " + rawTx.substring(8,20));
+            String response = blockchain.addTransactionToMempool(Transaction.fromJSON(rawTx));
+            logger.write(response);
             return "OK";
         }
         if(command.startsWith("POST BLOCK ")) {
             String rawBlock = command.substring(10);
-            logger.write("Получен блок " + rawBlock);
-            blockchain.addBlock(Block.fromJSON(rawBlock));
+            logger.write("Получен блок " + rawBlock.substring(10, 22));
+            String response = blockchain.addBlock(Block.fromJSON(rawBlock));
+            logger.write(response);
             return "OK";
         }
         return null;

@@ -2,6 +2,7 @@ package abcdra.net.client;
 
 import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
+import abcdra.net.ComplexData;
 import abcdra.net.JLogger;
 import abcdra.net.NodeThread;
 import abcdra.net.server.NodeServer;
@@ -12,6 +13,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.concurrent.Exchanger;
+
 //TODO Добавить задержку между запросами на синхронизацию
 //TODO Добавить запрос на добавление в мемпул
 //TODO Добавить запрос на блок
@@ -21,25 +24,16 @@ public class NodeClient implements Runnable {
     private Blockchain blockchain;
     private ArrayList<NodeServerThread> nodes;
     private JLogger logger;
-    private Block bufferBlock;
-    private Transaction bufferTx;
+    private Exchanger<ComplexData> exchanger;
 
-    public void setBufferBlock(Block block) {
-        if(block != null) {
-            bufferBlock = block;
-        }
-    }
 
-    public void setBufferTx(Transaction tx) {
-        if(tx!=null){
-            bufferTx = tx;
-        }
-    }
-
-    public NodeClient(Blockchain blockchain, JLogger logger) {
+    public NodeClient(Blockchain blockchain, JLogger logger,
+                      Exchanger<ComplexData> exchanger) {
         this.blockchain = blockchain;
         this.logger = logger;
         nodes = new ArrayList<>();
+        this.exchanger = exchanger;
+
     }
 
     private Socket getSocket(String ipAndPort) {
@@ -54,28 +48,32 @@ public class NodeClient implements Runnable {
         return null;
     }
 
-    public void sendBufferToAll() {
-        for (NodeServerThread node: nodes) {
-            node.setBufferTx(bufferTx);
-            node.setBufferBlock(bufferBlock);
-            bufferTx = null;
-            bufferBlock = null;
+    public void exchangeAll() {
+        try {
+            ComplexData data = exchanger.exchange(null);
+            for(NodeServerThread node: nodes) {
+                node.exchanger.exchange(data);
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
     @Override
     public void run() {
-        for(String ip : blockchain.getNodesIp()) {
+        nodes = new ArrayList<>();
+        for (String ip : blockchain.getNodesIp()) {
             Socket socket = getSocket(ip);
-            if(socket != null) {
-                NodeServerThread thread = new NodeServerThread(socket, blockchain, logger);
-                if(!nodes.contains(thread)) {
+
+            if (socket != null) {
+                NodeServerThread thread = new NodeServerThread(socket, blockchain, logger, new Exchanger<ComplexData>());
+                if (!nodes.contains(thread)) {
                     nodes.add(thread);
                     thread.start();
                 }
             }
         }
-        sendBufferToAll();
-
+        if(nodes.size() == 0) return;
+        while (true) exchangeAll();
     }
 }

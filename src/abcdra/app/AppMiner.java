@@ -1,10 +1,13 @@
 package abcdra.app;
 
 import abcdra.blockchain.Block;
+import abcdra.net.ComplexData;
 import abcdra.transaction.Transaction;
 
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static abcdra.app.AppUtil.getArrayFromJList;
 
@@ -55,7 +58,8 @@ public class AppMiner {
         if(response.equals("Added")) {
             JOptionPane.showMessageDialog(null, "Блок добавлен в блокчейн");
             app.appWallet.updateWalletInfo();
-            app.nodeClient.setBufferBlock(newBlock);
+            try {app.exchanger.exchange(new ComplexData(newBlock), 0, TimeUnit.SECONDS); } catch (InterruptedException |
+                                                                                        TimeoutException ignored) {}
         }
         app.lCurrentHeight.setText(String.valueOf(app.blockchain.maxHeight));
     }
