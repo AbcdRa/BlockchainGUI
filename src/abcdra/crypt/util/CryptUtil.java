@@ -12,18 +12,19 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class CryptUtil {
     public static boolean isLog = false;
     public static SecretKeySpec getKey(String pass) {
         try {
             byte[] hash = getHash(pass.getBytes(StandardCharsets.UTF_8));
-            SecretKeySpec secretKey = new SecretKeySpec(hash, "AES");
-            return secretKey;
+            if(hash != null) return new SecretKeySpec(hash, "AES");
         }
         catch (Exception e) {
             System.err.println("НЕ УДАЛОСЬ ПОЛУЧИТЬ КЛЮЧ ШИФРОВКИ");
             return null;
         }
+        return null;
     }
 
     public static void writeStringToFile(File file, String text) {
@@ -47,7 +48,7 @@ public class CryptUtil {
 
     public static String readStringFromFile(File file) {
         try(BufferedReader reader = new BufferedReader( new FileReader(file))) {
-            String line = null;
+            String line;
             StringBuilder stringBuilder = new StringBuilder();
             String ls = System.getProperty("line.separator");
             while( ( line = reader.readLine() ) != null ) {
@@ -76,10 +77,7 @@ public class CryptUtil {
         } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException e) {
             System.err.println("НЕ УДАЛОСЬ ЗАШИФРОВАТЬ СТРОКУ" + e.getMessage());
             return null;
-        } catch (IllegalBlockSizeException e) {
-            System.err.println("НЕ УДАЛОСЬ ЗАШИФРОВАТЬ СТРОКУ");
-            throw new RuntimeException(e);
-        } catch (BadPaddingException e) {
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
             System.err.println("НЕ УДАЛОСЬ ЗАШИФРОВАТЬ СТРОКУ");
             throw new RuntimeException(e);
         }

@@ -6,15 +6,13 @@ import abcdra.net.JLogger;
 import abcdra.net.NodeThread;
 import abcdra.transaction.Transaction;
 
-import javax.swing.*;
 import java.io.*;
 import java.net.Socket;
 
 public class NodeClientThread extends NodeThread {
 
-    private Blockchain blockchain;
-    private JLogger logger;
-    private int delay = 1000;
+    private final Blockchain blockchain;
+    private final JLogger logger;
 
     public NodeClientThread(Socket socket, Blockchain blockchain, JLogger logger) {
         super(socket);
@@ -30,15 +28,13 @@ public class NodeClientThread extends NodeThread {
             try {
                 String command = inBR.readLine();
                 String response = responseCommand(command);
-                Thread.sleep(delay);
+                //Thread.sleep(delay);
                 if(response != null && !response.equals("NULL")) {
                     send(response);
                 }
             } catch (IOException e) {
                 isOnline = false;
-                logger.write(socket.getInetAddress()+" отключился");
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                logger.write(socket.getInetAddress() + " отключился");
             }
         }
     }
@@ -57,7 +53,9 @@ public class NodeClientThread extends NodeThread {
         }
         if(command.equals("GET MEMPOOL")) {
             String rawMempool = blockchain.getRawMempool();
-            try { Thread.sleep(delay*2); } catch (Exception ignored) {};
+            try {
+                int delay = 1000;
+                Thread.sleep(delay ); } catch (Exception ignored) {}
             return rawMempool == null ? "EMPTY" : rawMempool;
         }
         if(command.startsWith("POST TX ")) {

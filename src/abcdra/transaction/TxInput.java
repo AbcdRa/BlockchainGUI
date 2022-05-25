@@ -5,9 +5,8 @@ public class TxInput implements TxPut {
     public int n;
     public long amount;
 
-    public TxInput() {
 
-    }
+    public TxInput() {}
 
     public boolean equals(TxInput oth) {
         return prevTx.equals(oth.prevTx) && (n == oth.n);

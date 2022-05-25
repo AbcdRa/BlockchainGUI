@@ -88,7 +88,6 @@ public class Validator {
 
 
     public static String validateMempoolAdd(Transaction tx, Blockchain blockchain) {
-        String txId = tx.base64Hash();
         Transaction[] currentMempool = blockchain.loadMempool();
         for(Transaction mempoolTx: currentMempool) {
             if(mempoolTx.equals(tx)) return "Transaction is already in mempool!";

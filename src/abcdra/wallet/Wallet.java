@@ -1,23 +1,12 @@
 package abcdra.wallet;
 
+import abcdra.crypt.util.CryptUtil;
 import com.starkbank.ellipticcurve.PrivateKey;
 import com.starkbank.ellipticcurve.PublicKey;
 import com.starkbank.ellipticcurve.utils.Base64;
-import com.starkbank.ellipticcurve.utils.ByteString;
-import abcdra.crypt.util.CryptUtil;
 
-import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class Wallet {
     PrivateKey sk;

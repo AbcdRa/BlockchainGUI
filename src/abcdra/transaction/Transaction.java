@@ -76,9 +76,9 @@ public class Transaction {
 
     public TxInput findInByTxHash(String hash, int n) {
         if(inputs == null) return null;
-        for (int i = 0; i < inputs.length; i++) {
-            if(inputs[i].prevTx.equals(hash) && inputs[i].n == n) {
-                return inputs[i];
+        for (TxInput input : inputs) {
+            if (input.prevTx.equals(hash) && input.n == n) {
+                return input;
             }
         }
         return null;
@@ -142,14 +142,14 @@ public class Transaction {
     public long calculateInputSum() {
         if(inputs==null || inputs.length == 0) return 0;
         long sum = 0;
-        for(int i=0; i < inputs.length; i++) sum += inputs[i].amount;
+        for (TxInput input : inputs) sum += input.amount;
         return sum;
     }
 
     public long calculateOutputSum() {
         if(outputs==null || outputs.length == 0) return 0;
         long sum = 0;
-        for(int i=0; i < outputs.length; i++) sum += outputs[i].amount;
+        for (TxOutput output : outputs) sum += output.amount;
         return sum;
     }
 
@@ -230,9 +230,9 @@ public class Transaction {
         if(puts == null || puts.length==0) return "[]";
 
 
-        String result = "[{";
+        StringBuilder result = new StringBuilder("[{");
         for(int i=0; i < puts.length-1; i++) {
-            result += puts[i].toString() + "}, {";
+            result.append(puts[i].toString()).append("}, {");
         }
         return  result + puts[puts.length-1].toString() + "}]";
 

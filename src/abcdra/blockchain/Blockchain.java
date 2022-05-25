@@ -2,9 +2,9 @@ package abcdra.blockchain;
 
 import abcdra.crypt.util.CryptUtil;
 import abcdra.transaction.Transaction;
+import abcdra.transaction.TxInput;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-import abcdra.transaction.TxInput;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,8 +12,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
+@SuppressWarnings("ALL")
 public class Blockchain {
     public String blockchainPath;
     public String memoryPoolPath;
@@ -40,12 +40,12 @@ public class Blockchain {
     public List<String> getNodesIp() {
         List<String> ips = new ArrayList<>();
         try(BufferedReader reader = new BufferedReader( new FileReader(otherNodeIpFilePath))) {
-            String line = null;
+            String line;
             while( ( line = reader.readLine() ) != null ) {
                 ips.add( line );
             }
 
-        } catch (IOException e) {
+        } catch (IOException ignored) {
 
         }
         return ips;
@@ -79,9 +79,10 @@ public class Blockchain {
         File[] txFiles = new File(memoryPoolPath).listFiles();
         assert txFiles != null;
         if(txFiles.length == 0) return;
-        for(int i =0; i < txFiles.length; i++) {
-            Transaction tx = Transaction.fromJSON(CryptUtil.readStringFromFile(txFiles[i]));
-            if(isAdded(tx)) txFiles[i].delete();
+        for (File txFile : txFiles) {
+            Transaction tx = Transaction.fromJSON(CryptUtil.readStringFromFile(txFile));
+
+            if (tx!=null && isAdded(tx)) txFile.delete();
         }
 
     }

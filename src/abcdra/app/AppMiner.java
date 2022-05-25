@@ -24,12 +24,8 @@ public class AppMiner {
             fromBlockToMempool();
             updateBlockReward();
         });
-        app.bMineBlock.addActionListener(e -> {
-            mineBlock();
-        });
-        app.bAddAllMempool.addActionListener(e -> {
-            addAllFromMempool();
-        });
+        app.bMineBlock.addActionListener(e -> mineBlock());
+        app.bAddAllMempool.addActionListener(e -> addAllFromMempool());
     }
 
     private void addAllFromMempool() {

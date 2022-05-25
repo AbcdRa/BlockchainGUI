@@ -24,8 +24,8 @@ public class NodeThread extends Thread{
     public void closeSocketForce() {
         try {
             socket.close();
-        } catch (IOException e) {
-            return;
+        } catch (IOException ignored) {
+
         }
     }
 

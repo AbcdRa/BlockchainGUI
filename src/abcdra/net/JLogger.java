@@ -6,19 +6,19 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.SimpleAttributeSet;
 
+//TODO Добавить цвета
 public class JLogger {
     private final Document document;
-    private final boolean isAppend;
-    private JTextPane textPane;
-    private int limit;
-    private AttributeSet attributeSet;
+
+    private final JTextPane textPane;
+    private final int limit;
+    private final AttributeSet attributeSet;
 
 
 
     public JLogger(JTextPane textPane) {
         this.textPane = textPane;
         this.document = textPane.getDocument();
-        this.isAppend = true;
         this.limit = 3000;
         this.attributeSet = new SimpleAttributeSet();
         textPane.setEditable( false );

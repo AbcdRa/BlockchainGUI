@@ -2,7 +2,6 @@ package abcdra.app;
 
 import abcdra.blockchain.Blockchain;
 import abcdra.crypt.util.CryptUtil;
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import javax.swing.*;
@@ -11,6 +10,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+//TODO Нужно сильно обрафакторить этот класс, слишком много не учтено
+
 
 public class AppConfig {
     public static String default_path = "data/blockchain_conf.json";
@@ -96,7 +98,7 @@ public class AppConfig {
         configMap.put("MEMPOOL_PATH", currentPath+"\\mempool");
 
         configMap.put("NODES_IP", currentPath+"\\nodes_ip.ini");
-        String json = null;
+        String json;
         try {
             parsed = configMap;
             json = mapper.writeValueAsString(configMap);

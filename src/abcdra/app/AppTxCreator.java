@@ -127,7 +127,7 @@ public class AppTxCreator {
         tx.sign(app.appWallet.wallet.getSk());
         String response = app.blockchain.addTransactionToMempool(tx);
         if(response.equals("Added")) try {app.exchanger.exchange(new ComplexData(tx), 0, TimeUnit.SECONDS);} catch (
-                InterruptedException | TimeoutException e) {}
+                InterruptedException | TimeoutException ignored) {}
         JOptionPane.showMessageDialog(null, response);
     }
 

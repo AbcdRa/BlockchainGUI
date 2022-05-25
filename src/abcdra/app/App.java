@@ -7,17 +7,12 @@ import abcdra.net.ComplexData;
 import abcdra.net.JLogger;
 import abcdra.net.client.NodeClient;
 import abcdra.net.server.NodeServer;
-import abcdra.transaction.Transaction;
 import abcdra.transaction.TxInput;
 import abcdra.transaction.TxOutput;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.concurrent.Exchanger;
 
-import static abcdra.app.AppUtil.getArrayFromJList;
 
 public class App {
     //TODO Допилить NET модуль
@@ -71,8 +66,7 @@ public class App {
     JLabel lResponse;
     private JButton bRunServer;
     private JButton bSyncronize;
-    private JLabel lServerInfo;
-    private JLabel lClientInfo;
+
     JButton bAddAllMempool;
     private JScrollPane spServerLog;
     private JScrollPane spClientLog;
@@ -82,9 +76,9 @@ public class App {
     protected final AppWallet appWallet;
     protected final AppExplorer appExplorer;
     protected final AppTxCreator appTxCreator;
-    protected NodeClient nodeClient;
-    protected NodeServer nodeServer;
-    protected AppMiner appMiner;
+    protected final NodeClient nodeClient;
+    protected final NodeServer nodeServer;
+    protected final AppMiner appMiner;
 
     protected Exchanger<ComplexData> exchanger;
 

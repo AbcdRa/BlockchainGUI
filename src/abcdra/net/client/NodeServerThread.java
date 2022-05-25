@@ -12,9 +12,8 @@ import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.Exchanger;
 
-//TODO NodeServerThread и NodeThread похожи можно их наследовать от одного предка
 public class NodeServerThread extends NodeThread {
-    private Blockchain blockchain;
+    private final Blockchain blockchain;
     private boolean isInitSynchronized = false;
 
     public Exchanger<ComplexData> exchanger;
@@ -41,16 +40,14 @@ public class NodeServerThread extends NodeThread {
         if(serverHeight <= blockchain.maxHeight) {
             return;
         }
-        if(serverHeight > blockchain.maxHeight) {
-            try {
-                Block request = requestBlock(blockchain.maxHeight);
-                String responseBlockchain = blockchain.addBlock(request);
-                if(responseBlockchain.equals("Added")) syncBlockchain(heightResponse);
-            }catch (IOException exception) {
-                return;
-            }
-
+        try {
+            Block request = requestBlock(blockchain.maxHeight);
+            String responseBlockchain = blockchain.addBlock(request);
+            if(responseBlockchain.equals("Added")) syncBlockchain(heightResponse);
+        }catch (IOException exception) {
+            isOnline = false;
         }
+
     }
 
     private void syncMempool(String rawMempool) {
@@ -62,38 +59,34 @@ public class NodeServerThread extends NodeThread {
             }
         } catch (IOException e) {
             logger.write("Ошибка распознавания мемпула");
-            return;
         }
     }
 
     private Block requestBlock(long i) throws IOException{
         send("GET BLOCK " + i);
         String response = inBR.readLine();
-        Block requested = Block.fromJSON(response);
-        return requested;
+        return Block.fromJSON(response);
     }
 
-    private String sendBlock(Block block) {
+    private void sendBlock(Block block) {
         try {
             send("POST BLOCK "+block.toJSON());
             logger.write("POST TX " + block);
             String response = inBR.readLine();
-            return response;
+            if(response.equals("OK")) logger.write("Ошибка отправки блока");
         } catch (IOException e) {
             isOnline = false;
-            return "ERROR";
         }
     }
 
-    private String sendTx(Transaction tx) {
+    private void sendTx(Transaction tx) {
         try {
             send("POST TX "+tx.toJSON());
             logger.write("POST TX " + tx.toJSON());
             String response = inBR.readLine();
-            return response;
+            if(!response.equals("OK")) logger.write("Ошибка отправки транзакции :" + response);
         } catch (IOException e) {
             isOnline = false;
-            return "ERROR";
         }
     }
 
@@ -114,7 +107,7 @@ public class NodeServerThread extends NodeThread {
             ComplexData data = exchanger.exchange(null);
             if(data.isBlock) sendBlock(data.block);
             else sendTx(data.tx);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignored) {
 
         }
 
@@ -125,12 +118,10 @@ public class NodeServerThread extends NodeThread {
         while (isOnline) {
             try {
                 if(!isInitSynchronized) initSync();
-                sleep(2000);
+
                 sendBuffers();
             } catch (IOException e) {
                 isOnline = false;
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
             }
         }
     }

@@ -3,6 +3,7 @@ package abcdra.blockchain;
 import abcdra.crypt.util.CryptUtil;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.Random;
 
 public class MiningUtil {
@@ -29,7 +30,7 @@ public class MiningUtil {
         long init_nonce = new Random().nextLong();
         long nonce = init_nonce+1;
         String StrWithNonce = partStr + nonce;
-        while (!isLower(CryptUtil.getHash(StrWithNonce.getBytes(StandardCharsets.UTF_8)), target) && nonce!=init_nonce) {
+        while (!isLower(Objects.requireNonNull(CryptUtil.getHash(StrWithNonce.getBytes(StandardCharsets.UTF_8))), target) && nonce!=init_nonce) {
             nonce++;
             StrWithNonce = partStr + nonce;
         }
