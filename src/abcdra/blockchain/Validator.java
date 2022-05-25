@@ -3,7 +3,6 @@ package abcdra.blockchain;
 import abcdra.crypt.util.CryptUtil;
 import abcdra.transaction.Transaction;
 import abcdra.transaction.TxInput;
-import com.starkbank.ellipticcurve.Ecdsa;
 
 import java.nio.charset.StandardCharsets;
 import com.starkbank.ellipticcurve.utils.Base64;
@@ -38,10 +37,13 @@ public class Validator {
         if(transaction.sign == null) return "Transaction without sign";
         if (transaction.calculateFee() < 0) return "Output sum less than Input sum";
         if(!transaction.verifySign()) return "Sign is not valid";
-        if(!isUniqIputs(transaction.inputs)) return "Transaction inputs has duplicate";
+        if(!isUniqueInputs(transaction.inputs)) return "Transaction inputs has duplicate";
+        if(transaction.outputs == null) return "Tx hasn't outputs !";
+        for(int j=0; j < transaction.outputs.length; j++) {
+            if(transaction.outputs[j].amount <= 0) return "Negative or null tx output";
+        }
         for(int j=0; j < transaction.inputs.length; j++) {
             TxInput currIn = transaction.inputs[j];
-
             TransactionInfo found = blockchain.findTransactionById(currIn.prevTx);
             if (found == null) return "Inputs linked to not exist transaction";
             found.outNum = currIn.n;
@@ -56,7 +58,7 @@ public class Validator {
         return "OK";
     }
 
-    public static boolean isUniqIputs(TxInput[] inputs) {
+    public static boolean isUniqueInputs(TxInput[] inputs) {
         if(inputs.length == 1) return true;
         for(int i = 0; i < inputs.length; i++) {
             for(int j = i+1; j < inputs.length; j++) {

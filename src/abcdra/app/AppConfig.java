@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AppConfig {
-    public static String default_path = "blockchain.json";
+    public static String default_path = "data/blockchain_conf.json";
     private static Map<String, String> parsed;
 
     public static Blockchain safeBlockchainInit() {

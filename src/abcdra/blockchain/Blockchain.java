@@ -6,7 +6,9 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import abcdra.transaction.TxInput;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +34,20 @@ public class Blockchain {
         this.memoryPoolPath = memoryPoolPath;
         this.otherNodeIpFilePath = otherNodeIpFilePath;
         maxHeight = getCurrentHeight();
+    }
+
+    public List<String> getNodesIp() {
+        List<String> ips = new ArrayList<>();
+        try(BufferedReader reader = new BufferedReader( new FileReader(otherNodeIpFilePath))) {
+            String line = null;
+            while( ( line = reader.readLine() ) != null ) {
+                ips.add( line );
+            }
+
+        } catch (IOException e) {
+
+        }
+        return ips;
     }
 
     public Blockchain(String jsonConfigPath) throws IOException {
@@ -150,13 +166,16 @@ public class Blockchain {
 //        throw new RuntimeException("NOT IMPLEMENTED");
 //    }
 
-    public Block getBlock(long height) {
+    public String getRawBlock(long height) {
         if(height >= maxHeight) {
             return null;
         }
 
-        String jsonBlock = CryptUtil.readStringFromFile(blockchainPath+"/"+defaultBlockName+height);
-        return Block.fromJSON(jsonBlock);
+        return CryptUtil.readStringFromFile(blockchainPath+"/"+defaultBlockName+height);
+    }
+
+    public Block getBlock(long height) {
+        return Block.fromJSON(getRawBlock(height));
     }
 
     public String addBlock(Block block) {

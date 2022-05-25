@@ -3,6 +3,8 @@ package abcdra.app;
 import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
 import abcdra.blockchain.TransactionInfo;
+import abcdra.net.client.NodeClient;
+import abcdra.net.server.NodeServer;
 import abcdra.transaction.Transaction;
 import abcdra.transaction.TxInput;
 import abcdra.transaction.TxOutput;
@@ -15,12 +17,12 @@ import java.util.ArrayList;
 import static abcdra.app.AppUtil.getArrayFromJList;
 
 public class App {
-    //TODO Добавить NET модуль
+    //TODO Допилить NET модуль
+    //TODO Обновлять высоту блокчейна при синхронизации блокчейна
     //TODO Добавить Вкладку на изменение конфигов
     //TODO Исправить баг двойного добавления UTXO
     //TODO Добавить возможность по двойному клику на вход найти начальный выход
     //TODO Добавить возможность по двойному клику на выход найти потраченный вход
-    //TODO Добавить возможность добавить все транзакции из мемпула
 
     private JPanel mainJPanel;
     protected JButton bCreateWallet;
@@ -66,6 +68,9 @@ public class App {
     private JLabel lResponse;
     private JButton bRunServer;
     private JButton bSyncronize;
+    private JLabel lServerInfo;
+    private JLabel lClientInfo;
+    private JButton bAddAllMempool;
     final Blockchain blockchain;
     protected final AppWallet appWallet;
     protected final AppExplorer appExplorer;
@@ -82,8 +87,7 @@ public class App {
         appWallet =  new AppWallet(this);
         appExplorer = new AppExplorer(this);
         appTxCreator = new AppTxCreator(this);
-
-
+        updateBlockReward();
         bLoadMempool.addActionListener(e -> loadMempool());
         bAddTx.addActionListener(e -> {
             fromMempoolToBlock();
@@ -118,7 +122,23 @@ public class App {
         bRunServer.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Net.runServer();
+                new Thread(new NodeServer(blockchain, lServerInfo)).start();
+            }
+        });
+        bSyncronize.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new Thread(new NodeClient(blockchain, lClientInfo)).start();
+            }
+        });
+        bAddAllMempool.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ArrayList<NamedTransaction> allMempoolTx = AppUtil.getArrayFromJList(listMempool);
+                for(NamedTransaction tx: allMempoolTx) {
+                    AppUtil.removeToJList(listMempool, tx);
+                    AppUtil.addToJList(listBlockTx, tx);
+                }
             }
         });
     }

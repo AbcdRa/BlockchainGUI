@@ -137,7 +137,8 @@ public class Block {
             restore.nonce = jsonNode.findValue("nonce").asLong();
             return restore;
         } catch (IOException e ) {
-            throw new RuntimeException(e);
+            return null;
+
         }
     }
 
