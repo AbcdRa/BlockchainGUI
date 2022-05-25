@@ -13,6 +13,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class CryptUtil {
+    public static boolean isLog = false;
     public static SecretKeySpec getKey(String pass) {
         try {
             byte[] hash = getHash(pass.getBytes(StandardCharsets.UTF_8));
@@ -56,7 +57,7 @@ public class CryptUtil {
             stringBuilder.deleteCharAt(stringBuilder.length()-1);
             return stringBuilder.toString();
         } catch (IOException e) {
-            System.err.println("НЕ УДАЛОСЬ ПРОЧИТАТЬ ФАЙЛ");
+            if(isLog) System.err.println("Empty File: " + file.getPath());
             return null;
         }
     }

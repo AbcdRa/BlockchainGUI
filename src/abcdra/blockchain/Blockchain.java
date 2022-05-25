@@ -19,6 +19,7 @@ public class Blockchain {
     public String memoryPoolPath;
     public String otherNodeIpFilePath;
     private static final String defaultBlockName = "block";
+    public String rawMempoolPath;
 
     public long maxHeight;
 
@@ -59,7 +60,10 @@ public class Blockchain {
         String memPoolPath = jsonNode.findValue("MEMPOOL_PATH").asText();
         String ipNodePath = jsonNode.findPath("NODES_IP").asText();
         this.blockchainPath = blockchainPath;
-        this.memoryPoolPath = memPoolPath;
+        this.memoryPoolPath = memPoolPath + "\\current";
+        new File(this.memoryPoolPath).mkdir();
+        this.rawMempoolPath = memPoolPath+"\\raw.json";
+        new File(rawMempoolPath).createNewFile();
         this.otherNodeIpFilePath = ipNodePath;
         maxHeight = getCurrentHeight();
         if(maxHeight == 0) {
@@ -74,7 +78,7 @@ public class Blockchain {
     public void cleanMempool() {
         File[] txFiles = new File(memoryPoolPath).listFiles();
         assert txFiles != null;
-
+        if(txFiles.length == 0) return;
         for(int i =0; i < txFiles.length; i++) {
             Transaction tx = Transaction.fromJSON(CryptUtil.readStringFromFile(txFiles[i]));
             if(isAdded(tx)) txFiles[i].delete();
@@ -91,6 +95,31 @@ public class Blockchain {
             result[i] = Transaction.fromJSON(CryptUtil.readStringFromFile(txFiles[i]));
         }
         return result;
+    }
+
+    public String getRawMempool() {
+        updateRawMempool();
+        return CryptUtil.readStringFromFile(new File(rawMempoolPath));
+    }
+
+    public void updateRawMempool() {
+        cleanMempool();
+        File[] txFiles = new File(memoryPoolPath).listFiles();
+        assert txFiles != null;
+        String[] result = new String[txFiles.length];
+        for(int i =0; i < txFiles.length; i++) {
+            result[i] = CryptUtil.readStringFromFile(txFiles[i]);
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            mapper.writeValue(new File(rawMempoolPath), result);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+
+        }
+
     }
 
     public long getNextCoinBase() {

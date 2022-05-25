@@ -2,37 +2,40 @@ package abcdra.net.client;
 
 import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
+import abcdra.net.JLogger;
+import abcdra.net.NodeThread;
+import abcdra.transaction.Transaction;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import javax.swing.*;
 import java.io.*;
 import java.net.Socket;
 
 //TODO NodeServerThread и NodeThread похожи можно их наследовать от одного предка
-public class NodeServerThread extends Thread{
+public class NodeServerThread extends NodeThread {
     private Blockchain blockchain;
-    private boolean isOnline;
-    private Socket socket;
-    private BufferedWriter outBW;
-    private BufferedReader inBR;
-    JLabel infoLabel;
+    private boolean isInitSynchronized = false;
+    private Block bufferBlock;
+    private Transaction bufferTx;
 
-    public NodeServerThread(Socket socket, Blockchain blockchain, JLabel infoLabel) {
-        this.infoLabel = infoLabel;
-        this.blockchain = blockchain;
-        isOnline = false;
-        this.socket = socket;
-        try {
-            outBW = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            inBR = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            isOnline = true;
-        } catch (IOException ignored) {
-
+    public void setBufferBlock(Block block) {
+        if(block != null) {
+            bufferBlock = block;
         }
     }
 
-    public void send(String message) throws IOException {
-        outBW.write(message+"\n");
-        outBW.flush();
+    public void setBufferTx(Transaction tx) {
+        if(tx!=null){
+            bufferTx = tx;
+        }
+    }
+
+    JLogger logger;
+
+    public NodeServerThread(Socket socket, Blockchain blockchain, JLogger logger) {
+        super(socket);
+        this.logger = logger;
+        this.blockchain = blockchain;
     }
 
 
@@ -58,6 +61,19 @@ public class NodeServerThread extends Thread{
         }
     }
 
+    private void syncMempool(String rawMempool) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String[] rawTxs = mapper.readValue(rawMempool, String[].class);
+            for(String rawTx : rawTxs) {
+                blockchain.addTransactionToMempool(Transaction.fromJSON(rawTx));
+            }
+        } catch (IOException e) {
+            logger.write("Ошибка распознавания мемпула");
+            return;
+        }
+    }
+
     private Block requestBlock(long i) throws IOException{
         send("GET BLOCK " + i);
         String response = inBR.readLine();
@@ -65,16 +81,57 @@ public class NodeServerThread extends Thread{
         return requested;
     }
 
+    private String sendBlock(Block block) {
+        try {
+            send("POST BLOCK "+block.toJSON());
+            String response = inBR.readLine();
+            return response;
+        } catch (IOException e) {
+            isOnline = false;
+            return "ERROR";
+        }
+    }
+
+    private String sendTx(Transaction tx) {
+        try {
+            send("POST TX "+tx.toJSON());
+            String response = inBR.readLine();
+            return response;
+        } catch (IOException e) {
+            isOnline = false;
+            return "ERROR";
+        }
+    }
+
+    private void initSync() throws IOException {
+        send("GET HEIGHT");
+        String response = inBR.readLine();
+        logger.write("Получен ответ: " + response);
+        syncBlockchain(response);
+        send("GET MEMPOOL");
+        response = inBR.readLine();
+        logger.write("Получен ответ: " + response);
+        syncMempool(response);
+        isInitSynchronized = true;
+    }
+
+    public void sendBuffers() {
+        if(bufferBlock!=null) {
+            String response = sendBlock(bufferBlock);
+            if(response.equals("OK")) bufferBlock = null;
+        }
+        if(bufferTx!=null) {
+            String response = sendTx(bufferTx);
+            if(response.equals("OK")) bufferTx = null;
+        }
+    }
+
     @Override
     public void run() {
         while (isOnline) {
             try {
-                infoLabel.setText("Отправляю команду");
-                send("GET HEIGHT");
-                String response = inBR.readLine();
-                infoLabel.setText("Получен ответ: " + response);
-                syncBlockchain(response);
-
+                if(!isInitSynchronized) initSync();
+                sendBuffers();
             } catch (IOException e) {
                 isOnline = false;
             }

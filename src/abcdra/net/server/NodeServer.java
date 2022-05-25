@@ -1,6 +1,7 @@
 package abcdra.net.server;
 
 import abcdra.blockchain.Blockchain;
+import abcdra.net.JLogger;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -11,13 +12,13 @@ import java.util.ArrayList;
 public class NodeServer implements Runnable{
     public int defaultPort = 3735;
     ServerSocket serverSocket;
-    private static ArrayList<NodeThread> nodes;
+    private static ArrayList<NodeClientThread> nodes;
     private Blockchain blockchain;
-    private JLabel infoLabel;
+    private JLogger logger;
 
 
-    public NodeServer(Blockchain blockchain, JLabel infoLabel) {
-        this.infoLabel = infoLabel;
+    public NodeServer(Blockchain blockchain, JLogger logger) {
+        this.logger = logger;
         serverSocket = initSocket();
         this.blockchain = blockchain;
         nodes = new ArrayList<>();
@@ -39,15 +40,15 @@ public class NodeServer implements Runnable{
     public void run() {
         while (true) {
             try {
-                infoLabel.setText("Жду клиентов");
+                logger.write("Жду клиентов");
                 Socket client = serverSocket.accept();
-                infoLabel.setText("Подключился" + client.getInetAddress());
-                NodeThread nodeThread = new NodeThread(client, blockchain, infoLabel);
-                nodes.add(nodeThread);
-                nodeThread.start();
+                logger.write("Подключился" + client.getInetAddress());
+                NodeClientThread nodeClientThread = new NodeClientThread(client, blockchain, logger);
+                nodes.add(nodeClientThread);
+                nodeClientThread.start();
             } catch (IOException e) {
 
-                infoLabel.setText("Не удалось принять клиента");
+                logger.write("Не удалось принять клиента");
                 e.printStackTrace();
             }
         }

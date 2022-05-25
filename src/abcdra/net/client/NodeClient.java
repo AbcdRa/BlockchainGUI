@@ -1,7 +1,11 @@
 package abcdra.net.client;
 
+import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
+import abcdra.net.JLogger;
+import abcdra.net.NodeThread;
 import abcdra.net.server.NodeServer;
+import abcdra.transaction.Transaction;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -16,11 +20,25 @@ import java.util.ArrayList;
 public class NodeClient implements Runnable {
     private Blockchain blockchain;
     private ArrayList<NodeServerThread> nodes;
-    private JLabel infoLabel;
+    private JLogger logger;
+    private Block bufferBlock;
+    private Transaction bufferTx;
 
-    public NodeClient(Blockchain blockchain, JLabel infoLabel) {
+    public void setBufferBlock(Block block) {
+        if(block != null) {
+            bufferBlock = block;
+        }
+    }
+
+    public void setBufferTx(Transaction tx) {
+        if(tx!=null){
+            bufferTx = tx;
+        }
+    }
+
+    public NodeClient(Blockchain blockchain, JLogger logger) {
         this.blockchain = blockchain;
-        this.infoLabel = infoLabel;
+        this.logger = logger;
         nodes = new ArrayList<>();
     }
 
@@ -36,16 +54,28 @@ public class NodeClient implements Runnable {
         return null;
     }
 
+    public void sendBufferToAll() {
+        for (NodeServerThread node: nodes) {
+            node.setBufferTx(bufferTx);
+            node.setBufferBlock(bufferBlock);
+            bufferTx = null;
+            bufferBlock = null;
+        }
+    }
+
     @Override
     public void run() {
         for(String ip : blockchain.getNodesIp()) {
             Socket socket = getSocket(ip);
             if(socket != null) {
-                NodeServerThread thread = new NodeServerThread(socket, blockchain, infoLabel);
-                nodes.add(thread);
-                thread.start();
+                NodeServerThread thread = new NodeServerThread(socket, blockchain, logger);
+                if(!nodes.contains(thread)) {
+                    nodes.add(thread);
+                    thread.start();
+                }
             }
         }
+        sendBufferToAll();
 
     }
 }

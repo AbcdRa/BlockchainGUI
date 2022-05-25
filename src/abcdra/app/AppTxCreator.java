@@ -123,6 +123,7 @@ public class AppTxCreator {
         tx.pvBlockHash = app.blockchain.getBlock(app.blockchain.getCurrentHeight()-1).hash;
         tx.sign(app.appWallet.wallet.getSk());
         String response = app.blockchain.addTransactionToMempool(tx);
+        if(response.equals("Added")) app.nodeClient.setBufferTx(tx);
         JOptionPane.showMessageDialog(null, response);
     }
 

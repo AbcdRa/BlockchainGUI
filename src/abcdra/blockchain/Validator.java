@@ -18,6 +18,7 @@ public class Validator {
     }
 
     public static String validateBlock(Block newBlock, Blockchain blockchain) {
+        if(newBlock == null) return "Empty block";
         if(newBlock.height != blockchain.maxHeight) return "Invalid height";
         if(!newBlock.isComplete()) return "Block not mined";
         if(newBlock.difficult != blockchain.calculateDiff()) return "Invalid difficult";
@@ -33,6 +34,7 @@ public class Validator {
     }
 
     public static String validateTransaction(Transaction transaction, Blockchain blockchain) {
+        if(transaction == null) return "Null Tx";
         if(blockchain.isAdded(transaction)) return "Transaction is already in block";
         if(transaction.sign == null) return "Transaction without sign";
         if (transaction.calculateFee() < 0) return "Output sum less than Input sum";

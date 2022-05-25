@@ -210,12 +210,12 @@ public class Transaction {
             restore.pvBlockHash = Base64.decode(jsonNode.findValue("pvBlockHash").asText());
 
             restore.updateHash();
-            if(jsonNode.findValue("hash").asText() == Base64.encodeBytes(restore.hash)) {
-                throw new RuntimeException("INVALID RESTORE HASH");
+            if(!jsonNode.findValue("hash").asText().equals(Base64.encodeBytes(restore.hash))) {
+                return null;
             }
             return restore;
         } catch (IOException e ) {
-            throw new RuntimeException(e);
+            return null;
         }
     }
 

@@ -3,6 +3,7 @@ package abcdra.app;
 import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
 import abcdra.blockchain.TransactionInfo;
+import abcdra.net.JLogger;
 import abcdra.net.client.NodeClient;
 import abcdra.net.server.NodeServer;
 import abcdra.transaction.Transaction;
@@ -57,24 +58,31 @@ public class App {
     JButton bCreateTx;
     JLabel lInputSum;
     JLabel lOutputSum;
-    private JList<NamedTransaction> listMempool;
-    private JList<NamedTransaction> listBlockTx;
-    private JButton bAddTx;
-    private JButton bMineBlock;
-    private JButton bLoadMempool;
-    private JButton bRemoveTx;
-    private JLabel lBlockReward;
+    JList<NamedTransaction> listMempool;
+    JList<NamedTransaction> listBlockTx;
+    JButton bAddTx;
+    JButton bMineBlock;
+    JButton bLoadMempool;
+    JButton bRemoveTx;
+    JLabel lBlockReward;
     JButton bCreateSimpleTx;
-    private JLabel lResponse;
+    JLabel lResponse;
     private JButton bRunServer;
     private JButton bSyncronize;
     private JLabel lServerInfo;
     private JLabel lClientInfo;
-    private JButton bAddAllMempool;
+    JButton bAddAllMempool;
+    private JScrollPane spServerLog;
+    private JScrollPane spClientLog;
+    private JTextPane tpServerLog;
+    private JTextPane tpClientLog;
     final Blockchain blockchain;
     protected final AppWallet appWallet;
     protected final AppExplorer appExplorer;
     protected final AppTxCreator appTxCreator;
+    protected NodeClient nodeClient;
+    protected NodeServer nodeServer;
+    protected AppMiner appMiner;
 
     public App() {
         blockchain = AppConfig.safeBlockchainInit();
@@ -84,98 +92,22 @@ public class App {
             blockchain.addBlock(genesis);
         }
 
+        nodeServer = new NodeServer(blockchain, new JLogger(tpServerLog));
+        nodeClient = new NodeClient(blockchain, new JLogger(tpClientLog));
+
         appWallet =  new AppWallet(this);
         appExplorer = new AppExplorer(this);
         appTxCreator = new AppTxCreator(this);
-        updateBlockReward();
-        bLoadMempool.addActionListener(e -> loadMempool());
-        bAddTx.addActionListener(e -> {
-            fromMempoolToBlock();
-            updateBlockReward();
-        });
-        bRemoveTx.addActionListener(e -> {
-            fromBlockToMempool();
-            updateBlockReward();
-        });
-        bMineBlock.addActionListener(e -> {
-            if(appWallet.wallet == null) {
-                JOptionPane.showMessageDialog(null,"НЕ СОЗДАН КОШЕЛЕК");
-                return;
-            }
-            ArrayList<NamedTransaction> txs = getArrayFromJList(listBlockTx);
-            Transaction[] transactions = new Transaction[txs.size()];
-            for(int i =0; i < txs.size(); i++) {
-                transactions[i] = txs.get(i).tx;
-            }
-            Block newBlock = new Block(blockchain, appWallet.wallet.address, transactions);
-            newBlock.mineBlock();
-            String response = blockchain.addBlock(newBlock);
-            lResponse.setText(response);
-            if(response.equals("Added")) {
-                JOptionPane.showMessageDialog(null, "Блок добавлен в блокчейн");
-                appWallet.updateWalletInfo();
-            }
-            lCurrentHeight.setText(String.valueOf(blockchain.maxHeight));
-        });
+        appMiner = new AppMiner(this);
 
+        appMiner.updateBlockReward();
 
-        bRunServer.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new Thread(new NodeServer(blockchain, lServerInfo)).start();
-            }
-        });
-        bSyncronize.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new Thread(new NodeClient(blockchain, lClientInfo)).start();
-            }
-        });
-        bAddAllMempool.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ArrayList<NamedTransaction> allMempoolTx = AppUtil.getArrayFromJList(listMempool);
-                for(NamedTransaction tx: allMempoolTx) {
-                    AppUtil.removeToJList(listMempool, tx);
-                    AppUtil.addToJList(listBlockTx, tx);
-                }
-            }
-        });
+        bRunServer.addActionListener(e -> new Thread(nodeServer).start());
+        bSyncronize.addActionListener(e -> new Thread(nodeClient).start());
+
     }
 
 
-
-    private void updateBlockReward() {
-        long reward = blockchain.getNextCoinBase();
-        ArrayList<NamedTransaction> txs = getArrayFromJList(listBlockTx);
-        for(NamedTransaction tx: txs) {
-            reward += tx.tx.calculateFee();
-        }
-        lBlockReward.setText(String.valueOf(reward));
-    }
-
-    private void fromBlockToMempool() {
-        if(listBlockTx.getSelectedIndex() == -1) return;
-        NamedTransaction selected = listBlockTx.getSelectedValue();
-        AppUtil.removeToJList(listBlockTx, selected);
-        AppUtil.addToJList(listMempool, selected);
-    }
-
-    private void fromMempoolToBlock() {
-        if(listMempool.getSelectedIndex() == -1) return;
-        NamedTransaction selected = listMempool.getSelectedValue();
-        AppUtil.removeToJList(listMempool, selected);
-        AppUtil.addToJList(listBlockTx, selected);
-    }
-
-    private void loadMempool() {
-        Transaction[] mempoolTxs = blockchain.loadMempool();
-        NamedTransaction[] wrappedTxs = new NamedTransaction[mempoolTxs.length];
-        for(int i = 0; i < wrappedTxs.length; i++) {
-            wrappedTxs[i] = new NamedTransaction(mempoolTxs[i]);
-        }
-        listMempool.setListData(wrappedTxs);
-    }
 
     public static void main(String[] args) {
         JFrame jFrame = new JFrame("Blockchain");
