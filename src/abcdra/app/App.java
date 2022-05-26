@@ -11,6 +11,10 @@ import abcdra.transaction.TxInput;
 import abcdra.transaction.TxOutput;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.MouseAdapter;
 import java.util.concurrent.Exchanger;
 
 
@@ -72,6 +76,7 @@ public class App {
     private JScrollPane spClientLog;
     private JTextPane tpServerLog;
     private JTextPane tpClientLog;
+    private JTabbedPane pVlockExplorer;
     final Blockchain blockchain;
     protected final AppWallet appWallet;
     protected final AppExplorer appExplorer;
@@ -86,11 +91,6 @@ public class App {
 
     public App() {
         blockchain = AppConfig.safeBlockchainInit();
-        if(blockchain.maxHeight == 0) {
-            Block genesis = new Block();
-            genesis.mineBlock();
-            blockchain.addBlock(genesis);
-        }
        exchanger = new Exchanger<>();
 
         nodeServer = new NodeServer(blockchain, new JLogger(tpServerLog));
@@ -106,6 +106,16 @@ public class App {
         bRunServer.addActionListener(e -> new Thread(nodeServer).start());
         bSyncronize.addActionListener(e -> new Thread(nodeClient).start());
 
+        lCurrentHeight.addMouseListener(new MouseAdapter() {
+        });
+        lCurrentHeight.addComponentListener(new ComponentAdapter() {
+        });
+        pVlockExplorer.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                lCurrentHeight.setText(String.valueOf(blockchain.maxHeight));
+            }
+        });
     }
 
 

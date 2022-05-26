@@ -2,6 +2,7 @@ package abcdra.net.client;
 
 import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
+import abcdra.blockchain.Configuration;
 import abcdra.net.ComplexData;
 import abcdra.net.JLogger;
 import abcdra.net.NodeThread;
@@ -17,6 +18,8 @@ public class NodeServerThread extends NodeThread {
     private boolean isInitSynchronized = false;
 
     public Exchanger<ComplexData> exchanger;
+
+
 
 
     JLogger logger;
@@ -90,16 +93,44 @@ public class NodeServerThread extends NodeThread {
         }
     }
 
+    private String getResponse(String command) throws IOException {
+        send(command);
+        return inBR.readLine();
+    }
+
     private void initSync() throws IOException {
-        send("GET HEIGHT");
-        String response = inBR.readLine();
-        logger.write("Получен ответ: " + response);
-        syncBlockchain(response);
-        send("GET MEMPOOL");
-        response = inBR.readLine();
+        String responseHeight = getResponse("GET HEIGHT");
+        logger.write("Получен ответ: " + responseHeight);
+        syncBlockchain(responseHeight);
+        String response = getResponse("GET MEMPOOL");
         logger.write("Получен ответ: " + response);
         syncMempool(response);
+        tryFork(responseHeight);
         isInitSynchronized = true;
+    }
+
+    private void tryFork(String heightRaw) throws IOException {
+        Long height = Long.parseLong(heightRaw);
+        if(height > blockchain.maxHeight + Configuration.FORCE_FORK_LENGTH) {
+            logger.write("Начинаю процесс форка");
+            long forkPoint = blockchain.maxHeight - 1;
+            for(; forkPoint >= -1; forkPoint--) {
+                String serverHash = getResponse("GET HASH " + forkPoint);
+                if(serverHash.equals(blockchain.getBlockHash(forkPoint))) break;
+            }
+            if(forkPoint <= -2) isOnline = false;
+            logger.write("FORK POINT = " + forkPoint);
+            String forkName = socket.getInetAddress().getHostName();
+            blockchain.createFork(forkName, forkPoint);
+            for(long i = forkPoint+1; i < blockchain.maxHeight + Configuration.FORCE_FORK_LENGTH; i++) {
+                Block block = requestBlock(i);
+                String response = blockchain.addToFork(forkName, block);
+                if(!response.equals("Added")) {isOnline =false; blockchain.removeFork(forkName); return;}
+            }
+            String response = blockchain.mergeFork(forkName);
+            logger.write(response);
+            initSync();
+        }
     }
 
     public void sendBuffers() {

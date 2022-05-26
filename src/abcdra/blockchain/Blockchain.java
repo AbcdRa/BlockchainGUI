@@ -3,6 +3,7 @@ package abcdra.blockchain;
 import abcdra.crypt.util.CryptUtil;
 import abcdra.transaction.Transaction;
 import abcdra.transaction.TxInput;
+import com.starkbank.ellipticcurve.utils.Base64;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -11,17 +12,22 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("ALL")
-public class Blockchain {
+public class Blockchain implements IBlockchain{
     public String blockchainPath;
     public String memoryPoolPath;
     public String otherNodeIpFilePath;
-    private static final String defaultBlockName = "block";
+    public String forkPath;
+    static final String defaultBlockName = "block";
     public String rawMempoolPath;
-
+    private String FD = File.separator;
     public long maxHeight;
+
+    Map<String, Forkchain> forks;
 
     //TODO Выполнять быстрый поиск по файлам
 
@@ -59,20 +65,49 @@ public class Blockchain {
         String blockchainPath = jsonNode.findValue("BLOCKCHAIN_PATH").asText();
         String memPoolPath = jsonNode.findValue("MEMPOOL_PATH").asText();
         String ipNodePath = jsonNode.findPath("NODES_IP").asText();
-        this.blockchainPath = blockchainPath;
-        this.memoryPoolPath = memPoolPath + "\\current";
+        this.blockchainPath = blockchainPath + FD + "current";
+        this.forkPath = blockchainPath + FD + "fork";
+        new File(this.blockchainPath).mkdir();
+        new File(forkPath).mkdir();
+        File[] cachForks = new File(forkPath).listFiles();
+        for(File cach: cachForks) cach.delete();
+        this.memoryPoolPath = memPoolPath + FD + "current";
         new File(this.memoryPoolPath).mkdir();
-        this.rawMempoolPath = memPoolPath+"\\raw.json";
+        this.rawMempoolPath = memPoolPath+ FD +"raw.json";
         new File(rawMempoolPath).createNewFile();
         this.otherNodeIpFilePath = ipNodePath;
         maxHeight = getCurrentHeight();
         if(maxHeight == 0) {
             Block genesis = new Block();
             genesis.mineBlock();
-            CryptUtil.writeStringToFile(blockchainPath+"/"+defaultBlockName+maxHeight,genesis.toJSON());
+            CryptUtil.writeStringToFile(this.blockchainPath+FD+defaultBlockName+maxHeight,genesis.toJSON());
             maxHeight = getCurrentHeight();
         }
+        forks = new HashMap<>();
+    }
 
+
+
+    public void createFork(String forkName, long forkPoint) {
+        forks.put(forkName, new Forkchain(this, forkName, forkPoint));
+    }
+
+
+    public void removeFork(String forkName) {
+        forks.get(forkName).cleanFork();
+        forks.remove(forkName);
+    }
+
+    public String addToFork(String forkName, Block block) {
+        return forks.get(forkName).addBlock(block);
+    }
+
+    public String mergeFork(String forkName) {
+        return forks.get(forkName).merge();
+    }
+
+    public void rewriteBlock(Block block) {
+        CryptUtil.writeStringToFile(blockchainPath+FD+defaultBlockName+block.height, block.toJSON());
     }
 
     public void cleanMempool() {
@@ -83,6 +118,19 @@ public class Blockchain {
             Transaction tx = Transaction.fromJSON(CryptUtil.readStringFromFile(txFile));
 
             if (tx!=null && isAdded(tx)) txFile.delete();
+        }
+    }
+
+    public String getBlockHash(long i) {
+        if(i == -1) return "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+        String rawBlock = getRawBlock(i);
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = null;
+        try {
+            jsonNode = mapper.readValue(rawBlock, JsonNode.class);
+            return jsonNode.findValue("hash").asText();
+        } catch (IOException e) {
+            return null;
         }
 
     }
@@ -201,7 +249,7 @@ public class Blockchain {
             return null;
         }
 
-        return CryptUtil.readStringFromFile(blockchainPath+"/"+defaultBlockName+height);
+        return CryptUtil.readStringFromFile(blockchainPath+FD+defaultBlockName+height);
     }
 
     public Block getBlock(long height) {
@@ -220,6 +268,11 @@ public class Blockchain {
         File[] files = new File(blockchainPath).listFiles();
         if(files==null) return 0;
         return files.length;
+    }
+
+    @Override
+    public long getMaxHeight() {
+        return maxHeight;
     }
 
     public int calculateDiff() {
@@ -241,8 +294,9 @@ public class Blockchain {
             int dDiff = (int) (Math.log(fraction)/Math.log(2));
             return getLastBlock().difficult - dDiff;
         }
-
-
     }
+
+
+
 
 }

@@ -72,6 +72,11 @@ public class NodeClientThread extends NodeThread {
             logger.write(response);
             return "OK";
         }
+        if(command.startsWith("GET HASH ")) {
+            long i = Long.parseLong(command.substring(9));
+            String hash = blockchain.getBlockHash(i);
+            return hash;
+        }
         return null;
     }
 }

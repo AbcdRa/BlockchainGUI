@@ -17,9 +17,11 @@ public class Validator {
         return true;
     }
 
-    public static String validateBlock(Block newBlock, Blockchain blockchain) {
+
+    public static String validateBlock(Block newBlock, IBlockchain blockchain) {
+        if(blockchain.getMaxHeight() == 0 && newBlock.height == 0) return "OK";
         if(newBlock == null) return "Empty block";
-        if(newBlock.height != blockchain.maxHeight) return "Invalid height";
+        if(newBlock.height != blockchain.getMaxHeight()) return "Invalid height";
         if(!newBlock.isComplete()) return "Block not mined";
         if(newBlock.difficult != blockchain.calculateDiff()) return "Invalid difficult";
         byte[] target = MiningUtil.getTarget(newBlock.difficult);
@@ -33,7 +35,7 @@ public class Validator {
         return "OK";
     }
 
-    public static String validateTransaction(Transaction transaction, Blockchain blockchain) {
+    public static String validateTransaction(Transaction transaction, IBlockchain blockchain) {
         if(transaction == null) return "Null Tx";
         if(blockchain.isAdded(transaction)) return "Transaction is already in block";
         if(transaction.sign == null) return "Transaction without sign";
@@ -70,8 +72,8 @@ public class Validator {
         return true;
     }
 
-    public static String validateTransactions(Transaction[] transactions, Blockchain blockchain) {
-        if(!validCoinBaseTx(transactions[0], blockchain.maxHeight)) return "Invalid Coinbase Tx";
+    public static String validateTransactions(Transaction[] transactions, IBlockchain blockchain) {
+        if(!validCoinBaseTx(transactions[0], blockchain.getMaxHeight())) return "Invalid Coinbase Tx";
         long fee = Transaction.getFee(transactions);
         if(fee == 0) {
             if(transactions[0].outputs.length != 1) return "extra fee outputs";
