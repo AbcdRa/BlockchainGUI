@@ -1,5 +1,6 @@
 package abcdra.app;
 
+import abcdra.blockchain.CoinSUConvert;
 import abcdra.blockchain.TransactionInfo;
 import abcdra.net.ComplexData;
 import abcdra.transaction.Transaction;
@@ -31,9 +32,10 @@ public class AppTxCreator {
 
     private void createSimpleTx() {
         String address = JOptionPane.showInputDialog("Адрес: ");
-        long amount = Long.parseLong(JOptionPane.showInputDialog("Сумма: "));
-        long fee = Long.parseLong(JOptionPane.showInputDialog("Комиссия: "));
         long inputSum = Long.parseLong(app.lInputSum.getText());
+        long amount = CoinSUConvert.parse(JOptionPane.showInputDialog("Сумма: ", CoinSUConvert.present(inputSum)));
+        long fee = CoinSUConvert.parse(JOptionPane.showInputDialog("Комиссия: ", CoinSUConvert.present(20000)));
+
         addToJList(app.listTxOutputs, new TxOutput(address, amount));
         addToJList(app.listTxOutputs, new TxOutput(app.appWallet.wallet.address, inputSum-amount-fee));
         updateTxInfo();
@@ -57,7 +59,9 @@ public class AppTxCreator {
     private void addTxOutput() {
         try {
             String address = JOptionPane.showInputDialog("Адрес получателя: ");
-            long amount = Long.parseLong(JOptionPane.showInputDialog("Кол-во: "));
+            long inputSum = Long.parseLong(app.lInputSum.getText());
+            long amount = CoinSUConvert.parse(JOptionPane.showInputDialog("Кол-во: ",
+                    CoinSUConvert.present(inputSum)));
             addToJList(app.listTxOutputs, new TxOutput(address, amount));
             updateTxInfo();
         } catch (Exception ignored) {

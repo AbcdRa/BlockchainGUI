@@ -51,9 +51,7 @@ public class Blockchain implements IBlockchain{
                 ips.add( line );
             }
 
-        } catch (IOException ignored) {
-
-        }
+        } catch (IOException ignored) {}
         return ips;
     }
 

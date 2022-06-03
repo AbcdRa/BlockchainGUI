@@ -1,6 +1,5 @@
 package abcdra.app;
 
-import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
 import abcdra.blockchain.TransactionInfo;
 import abcdra.net.ComplexData;
@@ -13,18 +12,19 @@ import abcdra.transaction.TxOutput;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.MouseAdapter;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.concurrent.Exchanger;
 
 
 public class App {
-    //TODO Допилить NET модуль
-    //TODO Обновлять высоту блокчейна при синхронизации блокчейна
+    //TODO Допилить NET модуль сохранение транзакций
     //TODO Добавить Вкладку на изменение конфигов
     //TODO Исправить баг двойного добавления UTXO
     //TODO Добавить возможность по двойному клику на вход найти начальный выход
     //TODO Добавить возможность по двойному клику на выход найти потраченный вход
+    //TODO Ошибки поиска конфига
+
 
     private JPanel mainJPanel;
     protected JButton bCreateWallet;
@@ -77,6 +77,7 @@ public class App {
     private JTextPane tpServerLog;
     private JTextPane tpClientLog;
     private JTabbedPane pVlockExplorer;
+    JButton bAutoMining;
     final Blockchain blockchain;
     protected final AppWallet appWallet;
     protected final AppExplorer appExplorer;
@@ -116,6 +117,13 @@ public class App {
                 lCurrentHeight.setText(String.valueOf(blockchain.maxHeight));
             }
         });
+        tfUTXO.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                appWallet.changeShowMode();
+            }
+        });
+
     }
 
 
@@ -127,7 +135,9 @@ public class App {
         jFrame.setContentPane(new App().mainJPanel);
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jFrame.pack();
-        jFrame.setSize(1200,500);
+        Image icon = Toolkit.getDefaultToolkit().getImage("image\\icon.png");
+        jFrame.setIconImage(icon);
+        jFrame.setSize(1000,500);
         jFrame.setVisible(true);
     }
 }

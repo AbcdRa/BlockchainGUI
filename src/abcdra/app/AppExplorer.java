@@ -47,7 +47,7 @@ public class AppExplorer {
             NamedTransaction selected = app.listTxs.getSelectedValue();
             Transaction currentTx = selected.tx;
             if(currentTx.isCoinBase()) {
-                app.listInputs.setListData(new TxInput[]{new TxInput("Новые монеты",0,0)});
+                app.listInputs.setListData(new TxInput[]{new TxInput("Новые CoinSU монеты и комиссия ",0,0)});
             } else {
                 app.listInputs.setListData(currentTx.inputs);
             }

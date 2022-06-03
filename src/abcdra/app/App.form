@@ -103,7 +103,7 @@
               </component>
             </children>
           </grid>
-          <grid id="fdf0f" layout-manager="GridLayoutManager" row-count="12" column-count="25" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="fdf0f" layout-manager="GridLayoutManager" row-count="13" column-count="20" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="BlockExplorer"/>
@@ -145,7 +145,7 @@
               </component>
               <component id="daefa" class="javax.swing.JLabel" binding="lHash">
                 <constraints>
-                  <grid row="1" column="1" row-span="1" col-span="24" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="1" column="1" row-span="1" col-span="19" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="null"/>
@@ -161,7 +161,7 @@
               </component>
               <component id="b96b6" class="javax.swing.JLabel" binding="lPvHash">
                 <constraints>
-                  <grid row="2" column="1" row-span="1" col-span="24" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="2" column="1" row-span="1" col-span="19" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="null"/>
@@ -193,7 +193,7 @@
               </component>
               <component id="18623" class="javax.swing.JLabel" binding="lMerkleRoot">
                 <constraints>
-                  <grid row="4" column="1" row-span="1" col-span="24" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="4" column="1" row-span="1" col-span="19" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="null"/>
@@ -209,7 +209,7 @@
               </component>
               <component id="31e13" class="javax.swing.JLabel" binding="lHeight">
                 <constraints>
-                  <grid row="5" column="1" row-span="1" col-span="19" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="1" row-span="1" col-span="17" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="-1"/>
@@ -257,7 +257,7 @@
               </component>
               <component id="c1be9" class="javax.swing.JLabel" binding="lMinerAddress">
                 <constraints>
-                  <grid row="8" column="1" row-span="1" col-span="20" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="8" column="1" row-span="1" col-span="18" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="null"/>
@@ -273,7 +273,7 @@
               </component>
               <component id="29c36" class="javax.swing.JList" binding="listTxs">
                 <constraints>
-                  <grid row="10" column="0" row-span="2" col-span="1" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                  <grid row="10" column="0" row-span="3" col-span="1" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="50"/>
                   </grid>
                 </constraints>
@@ -287,22 +287,6 @@
                   <text value="Входы:"/>
                 </properties>
               </component>
-              <component id="a55e0" class="javax.swing.JList" binding="listInputs">
-                <constraints>
-                  <grid row="11" column="1" row-span="1" col-span="2" vsize-policy="7" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="50"/>
-                  </grid>
-                </constraints>
-                <properties/>
-              </component>
-              <component id="b829a" class="javax.swing.JList" binding="listOuts">
-                <constraints>
-                  <grid row="11" column="3" row-span="1" col-span="22" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="50"/>
-                  </grid>
-                </constraints>
-                <properties/>
-              </component>
               <component id="f2604" class="javax.swing.JLabel">
                 <constraints>
                   <grid row="0" column="3" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
@@ -313,7 +297,7 @@
               </component>
               <component id="14c64" class="javax.swing.JLabel" binding="lCurrentHeight">
                 <constraints>
-                  <grid row="0" column="5" row-span="1" col-span="8" vsize-policy="0" hsize-policy="0" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                  <grid row="0" column="5" row-span="1" col-span="7" vsize-policy="0" hsize-policy="0" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="0"/>
@@ -327,6 +311,32 @@
                   <text value="Выходы:"/>
                 </properties>
               </component>
+              <scrollpane id="c08fc">
+                <constraints>
+                  <grid row="11" column="1" row-span="2" col-span="2" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="a55e0" class="javax.swing.JList" binding="listInputs">
+                    <constraints/>
+                    <properties/>
+                  </component>
+                </children>
+              </scrollpane>
+              <scrollpane id="8cc57">
+                <constraints>
+                  <grid row="11" column="3" row-span="2" col-span="17" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="b829a" class="javax.swing.JList" binding="listOuts">
+                    <constraints/>
+                    <properties/>
+                  </component>
+                </children>
+              </scrollpane>
             </children>
           </grid>
           <grid id="db885" layout-manager="GridLayoutManager" row-count="9" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -337,14 +347,6 @@
             <properties/>
             <border type="none"/>
             <children>
-              <component id="427a" class="javax.swing.JList" binding="listFindUTXO">
-                <constraints>
-                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="50"/>
-                  </grid>
-                </constraints>
-                <properties/>
-              </component>
               <component id="1f109" class="javax.swing.JButton" binding="bAddOutput">
                 <constraints>
                   <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
@@ -385,22 +387,6 @@
                 <properties>
                   <text value="Найти UTXO"/>
                 </properties>
-              </component>
-              <component id="1e6d0" class="javax.swing.JList" binding="listTxOutputs">
-                <constraints>
-                  <grid row="1" column="3" row-span="1" col-span="2" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="50"/>
-                  </grid>
-                </constraints>
-                <properties/>
-              </component>
-              <component id="1d415" class="javax.swing.JList" binding="listTxInputs">
-                <constraints>
-                  <grid row="1" column="1" row-span="1" col-span="2" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="50"/>
-                  </grid>
-                </constraints>
-                <properties/>
               </component>
               <component id="1a4e2" class="javax.swing.JLabel" binding="lOutputSum">
                 <constraints>
@@ -471,6 +457,45 @@
                   <text value="Комиссия: "/>
                 </properties>
               </component>
+              <scrollpane id="a267c">
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="427a" class="javax.swing.JList" binding="listFindUTXO">
+                    <constraints/>
+                    <properties/>
+                  </component>
+                </children>
+              </scrollpane>
+              <scrollpane id="3bc20">
+                <constraints>
+                  <grid row="1" column="1" row-span="1" col-span="2" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="1d415" class="javax.swing.JList" binding="listTxInputs">
+                    <constraints/>
+                    <properties/>
+                  </component>
+                </children>
+              </scrollpane>
+              <scrollpane id="fc7f9">
+                <constraints>
+                  <grid row="1" column="3" row-span="1" col-span="2" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="1e6d0" class="javax.swing.JList" binding="listTxOutputs">
+                    <constraints/>
+                    <properties/>
+                  </component>
+                </children>
+              </scrollpane>
             </children>
           </grid>
           <grid id="d3b4d" layout-manager="GridLayoutManager" row-count="10" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -587,6 +612,14 @@
                 </constraints>
                 <properties>
                   <text value="Добавить все"/>
+                </properties>
+              </component>
+              <component id="1383f" class="javax.swing.JButton" binding="bAutoMining">
+                <constraints>
+                  <grid row="3" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="Добывать блоки"/>
                 </properties>
               </component>
             </children>

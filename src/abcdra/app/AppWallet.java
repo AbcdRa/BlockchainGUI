@@ -1,5 +1,6 @@
 package abcdra.app;
 
+import abcdra.blockchain.CoinSUConvert;
 import abcdra.wallet.Wallet;
 
 import javax.swing.*;
@@ -10,6 +11,7 @@ public class AppWallet {
     //TODO Красивый вывод счета
     protected Wallet wallet;
     private final App app;
+    private boolean balancePShowMode = true;
 
     public AppWallet(App app) {
         this.app =app;
@@ -33,8 +35,13 @@ public class AppWallet {
         fileChooser.setFileFilter(filter);
         int response = fileChooser.showSaveDialog(null);
         if(JFileChooser.APPROVE_OPTION == response) {
-            String pass = JOptionPane.showInputDialog("Введите пароль от кошелька");
-            wallet.save(fileChooser.getSelectedFile(), pass);
+            JPasswordField pf = new JPasswordField();
+            int okCxl = JOptionPane.showConfirmDialog(null, pf, "Введите пароль от кошелька", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (okCxl == JOptionPane.OK_OPTION) {
+                String password = new String(pf.getPassword());
+                wallet.save(fileChooser.getSelectedFile(), password);
+                JOptionPane.showMessageDialog(null, "Кошелек успешно сохранен!");
+            }
         }
     }
 
@@ -52,8 +59,14 @@ public class AppWallet {
         int result = fileChooser.showOpenDialog(null);
         if(result != JFileChooser.APPROVE_OPTION) return;
         File file = fileChooser.getSelectedFile();
-        String pass = JOptionPane.showInputDialog("Введите пароль от кошелька");
-        Wallet wallet = Wallet.restore(file, pass);
+        JPasswordField pf = new JPasswordField();
+        int okCxl = JOptionPane.showConfirmDialog(null, pf, "Введите пароль",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        Wallet wallet = null;
+        if (okCxl == JOptionPane.OK_OPTION) {
+            String password = new String(pf.getPassword());
+            wallet = Wallet.restore(file, password);
+        }
         if(wallet == null) {
             JOptionPane.showMessageDialog(null, "Не удалось восстановить кошелек");
             return;
@@ -65,6 +78,12 @@ public class AppWallet {
     protected void updateWalletInfo() {
         app.tfAddress.setText(wallet.address);
         long utxo = app.blockchain.getUTXO(wallet.address);
-        app.tfUTXO.setText(String.valueOf(utxo));
+        if(balancePShowMode) app.tfUTXO.setText(CoinSUConvert.present(utxo));
+        else app.tfUTXO.setText(String.valueOf(utxo));
+    }
+
+    protected void changeShowMode() {
+        balancePShowMode = !balancePShowMode;
+        updateWalletInfo();
     }
 }

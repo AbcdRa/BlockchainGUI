@@ -5,6 +5,8 @@ import abcdra.net.ComplexData;
 import abcdra.transaction.Transaction;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -13,8 +15,10 @@ import static abcdra.app.AppUtil.getArrayFromJList;
 
 public class AppMiner {
     App app;
+    AppAutoMiner autoMiner;
     public AppMiner(App app) {
         this.app =app;
+        this.autoMiner = new AppAutoMiner(this);
         app.bLoadMempool.addActionListener(e -> loadMempool());
         app.bAddTx.addActionListener(e -> {
             fromMempoolToBlock();
@@ -24,11 +28,15 @@ public class AppMiner {
             fromBlockToMempool();
             updateBlockReward();
         });
-        app.bMineBlock.addActionListener(e -> mineBlock());
+        app.bMineBlock.addActionListener(e -> mineBlock(true));
         app.bAddAllMempool.addActionListener(e -> addAllFromMempool());
+        app.bAutoMining.addActionListener(e -> {
+            autoMiner.isWork = !autoMiner.isWork;
+            autoMiner.start();
+        });
     }
 
-    private void addAllFromMempool() {
+    protected void addAllFromMempool() {
         ArrayList<NamedTransaction> allMempoolTx = AppUtil.getArrayFromJList(app.listMempool);
         for(NamedTransaction tx: allMempoolTx) {
             AppUtil.removeToJList(app.listMempool, tx);
@@ -37,7 +45,7 @@ public class AppMiner {
     }
 
 
-    private void mineBlock() {
+    protected void mineBlock(boolean showMessage) {
         if(app.appWallet.wallet == null) {
             JOptionPane.showMessageDialog(null,"НЕ СОЗДАН КОШЕЛЕК");
             return;
@@ -52,7 +60,7 @@ public class AppMiner {
         String response = app.blockchain.addBlock(newBlock);
         app.lResponse.setText(response);
         if(response.equals("Added")) {
-            JOptionPane.showMessageDialog(null, "Блок добавлен в блокчейн");
+            if(showMessage) JOptionPane.showMessageDialog(null, "Блок добавлен в блокчейн");
             app.appWallet.updateWalletInfo();
             try {app.exchanger.exchange(new ComplexData(newBlock), 0, TimeUnit.SECONDS); } catch (InterruptedException |
                                                                                         TimeoutException ignored) {}
@@ -83,7 +91,7 @@ public class AppMiner {
         AppUtil.addToJList(app.listBlockTx, selected);
     }
 
-    private void loadMempool() {
+    protected void loadMempool() {
         Transaction[] mempoolTxs = app.blockchain.loadMempool();
         NamedTransaction[] wrappedTxs = new NamedTransaction[mempoolTxs.length];
         for(int i = 0; i < wrappedTxs.length; i++) {
