@@ -8,7 +8,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 
 public class AppWallet {
-    //TODO Красивый вывод счета
     protected Wallet wallet;
     private final App app;
     private boolean balancePShowMode = true;

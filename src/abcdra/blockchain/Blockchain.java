@@ -3,7 +3,6 @@ package abcdra.blockchain;
 import abcdra.crypt.util.CryptUtil;
 import abcdra.transaction.Transaction;
 import abcdra.transaction.TxInput;
-import com.starkbank.ellipticcurve.utils.Base64;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -105,7 +104,13 @@ public class Blockchain implements IBlockchain{
     }
 
     public void rewriteBlock(Block block) {
+        Block orphanBlock = getBlock(block.height);
         CryptUtil.writeStringToFile(blockchainPath+FD+defaultBlockName+block.height, block.toJSON());
+        if(orphanBlock != null && orphanBlock.transactions.length > 1) {
+            for(int i=1; i < orphanBlock.transactions.length; i++) {
+                addTransactionToMempool(orphanBlock.transactions[i]);
+            }
+        }
     }
 
     public void cleanMempool() {

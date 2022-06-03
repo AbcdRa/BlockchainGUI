@@ -19,8 +19,9 @@ public class Validator {
 
 
     public static String validateBlock(Block newBlock, IBlockchain blockchain) {
-        if(blockchain.getMaxHeight() == 0 && newBlock.height == 0) return "OK";
         if(newBlock == null) return "Empty block";
+        if(blockchain.getMaxHeight() == 0 && newBlock.height == 0) return "OK";
+        if (newBlock.date.compareTo(blockchain.getLastBlock().date) < 0) return "Invalid date";
         if(newBlock.height != blockchain.getMaxHeight()) return "Invalid height";
         if(!newBlock.isComplete()) return "Block not mined";
         if(newBlock.difficult != blockchain.calculateDiff()) return "Invalid difficult";

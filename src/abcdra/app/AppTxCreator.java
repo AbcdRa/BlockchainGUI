@@ -93,7 +93,6 @@ public class AppTxCreator {
         updateTxInfo();
     }
 
-    //TODO Добавить подсказки сколько можно ввести
     private void updateTxInfo() {
         ListModel<TransactionInfo> inputModel = app.listTxInputs.getModel();
         long sumInput = 0;

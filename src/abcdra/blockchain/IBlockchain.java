@@ -12,5 +12,6 @@ public interface IBlockchain {
     boolean isSpent(TransactionInfo found);
 
     Block getBlock(long i);
+    Block getLastBlock();
 
 }

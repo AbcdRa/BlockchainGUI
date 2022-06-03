@@ -110,7 +110,7 @@ public class NodeServerThread extends NodeThread {
     }
 
     private void tryFork(String heightRaw) throws IOException {
-        Long height = Long.parseLong(heightRaw);
+        long height = Long.parseLong(heightRaw);
         if(height > blockchain.maxHeight + Configuration.FORCE_FORK_LENGTH) {
             logger.write("Начинаю процесс форка");
             long forkPoint = blockchain.maxHeight - 1;

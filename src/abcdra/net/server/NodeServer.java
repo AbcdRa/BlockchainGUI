@@ -11,7 +11,7 @@ import java.net.Socket;
 public class NodeServer implements Runnable{
     public int defaultPort = 3735;
     ServerSocket serverSocket;
-    public boolean isEnable = true;
+    private boolean isEnable = true;
     private final Blockchain blockchain;
     private final JLogger logger;
 
@@ -43,7 +43,7 @@ public class NodeServer implements Runnable{
                 NodeClientThread nodeClientThread = new NodeClientThread(client, blockchain, logger);
                 nodeClientThread.start();
             } catch (IOException e) {
-
+                isEnable = false;
                 logger.write("Не удалось принять клиента");
                 e.printStackTrace();
             }

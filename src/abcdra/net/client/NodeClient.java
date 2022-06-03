@@ -11,7 +11,7 @@ import java.util.concurrent.Exchanger;
 
 //TODO Возможность перезапуска если все клиенты не в сети
 //TODO Добавить информацию о том синхронизирован ли узел
-//TODO Добавить возможность форка
+
 public class NodeClient implements Runnable {
     private final Blockchain blockchain;
     private ArrayList<NodeServerThread> nodes;

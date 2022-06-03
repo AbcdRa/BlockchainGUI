@@ -98,7 +98,7 @@ public class Forkchain implements IBlockchain{
 
     public String addBlock(Block block) {
         File newFile = new File(blockchain.forkPath + FD + forkName + FD +
-                blockchain.defaultBlockName + block.height);
+                Blockchain.defaultBlockName + block.height);
         String response =Validator.validateBlock(block, this);
         if(!response.equals("OK")) return response;
         CryptUtil.writeStringToFile(newFile, block.toJSON());
@@ -122,5 +122,10 @@ public class Forkchain implements IBlockchain{
         if(i < forkPoint) return blockchain.getBlock(i);
         File blockFile = new File(blockchain.forkPath + FD+ forkName + FD + blockchain.defaultBlockName + i);
         return Block.fromJSON(CryptUtil.readStringFromFile(blockFile));
+    }
+
+    @Override
+    public Block getLastBlock() {
+        return getBlock(maxHeight-1);
     }
 }
