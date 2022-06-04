@@ -2,7 +2,7 @@ package abcdra.transaction;
 import abcdra.blockchain.MiningUtil;
 import com.starkbank.ellipticcurve.*;
 import com.starkbank.ellipticcurve.utils.Base64;
-import abcdra.crypt.util.CryptUtil;
+import abcdra.util.CryptUtil;
 import com.starkbank.ellipticcurve.utils.ByteString;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;

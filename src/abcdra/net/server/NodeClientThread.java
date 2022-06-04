@@ -2,7 +2,7 @@ package abcdra.net.server;
 
 import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
-import abcdra.net.JLogger;
+import abcdra.util.JLogger;
 import abcdra.net.NodeThread;
 import abcdra.transaction.Transaction;
 

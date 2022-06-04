@@ -4,7 +4,7 @@ import abcdra.blockchain.Block;
 import abcdra.blockchain.Blockchain;
 import abcdra.blockchain.Configuration;
 import abcdra.net.ComplexData;
-import abcdra.net.JLogger;
+import abcdra.util.JLogger;
 import abcdra.net.NodeThread;
 import abcdra.transaction.Transaction;
 import org.codehaus.jackson.map.ObjectMapper;

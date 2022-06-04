@@ -2,7 +2,7 @@ package abcdra.net.client;
 
 import abcdra.blockchain.Blockchain;
 import abcdra.net.ComplexData;
-import abcdra.net.JLogger;
+import abcdra.util.JLogger;
 
 import java.io.IOException;
 import java.net.Socket;

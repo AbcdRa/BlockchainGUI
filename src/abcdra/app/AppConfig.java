@@ -1,7 +1,7 @@
 package abcdra.app;
 
 import abcdra.blockchain.Blockchain;
-import abcdra.crypt.util.CryptUtil;
+import abcdra.util.CryptUtil;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import javax.swing.*;

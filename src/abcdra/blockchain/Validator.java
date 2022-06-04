@@ -1,6 +1,6 @@
 package abcdra.blockchain;
 
-import abcdra.crypt.util.CryptUtil;
+import abcdra.util.CryptUtil;
 import abcdra.transaction.Transaction;
 import abcdra.transaction.TxInput;
 

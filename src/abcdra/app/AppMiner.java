@@ -3,13 +3,14 @@ package abcdra.app;
 import abcdra.blockchain.Block;
 import abcdra.net.ComplexData;
 import abcdra.transaction.Transaction;
+import abcdra.util.AppUtil;
 
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static abcdra.app.AppUtil.getArrayFromJList;
+import static abcdra.util.AppUtil.getArrayFromJList;
 
 public class AppMiner {
     App app;

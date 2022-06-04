@@ -1,4 +1,4 @@
-package abcdra.crypt.util;
+package abcdra.util;
 
 import com.starkbank.ellipticcurve.utils.Base64;
 import javax.crypto.BadPaddingException;

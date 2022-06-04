@@ -1,8 +1,9 @@
 package abcdra.blockchain;
 
-import abcdra.crypt.util.CryptUtil;
+import abcdra.util.CryptUtil;
 import abcdra.transaction.Transaction;
 import abcdra.transaction.TxInput;
+import com.starkbank.ellipticcurve.utils.Base64;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -10,10 +11,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @SuppressWarnings("ALL")
 public class Blockchain implements IBlockchain{
@@ -273,6 +271,15 @@ public class Blockchain implements IBlockchain{
         return files.length;
     }
 
+    public Block findBlockByHash(String hash) {
+        for(int i=0; i < maxHeight; i++) {
+            Block block = getBlock(i);
+
+            if (Base64.encodeBytes(block.hash).equals(hash)) return block;
+        }
+        return null;
+    }
+
     @Override
     public long getMaxHeight() {
         return maxHeight;
@@ -298,8 +305,5 @@ public class Blockchain implements IBlockchain{
             return getLastBlock().difficult - dDiff;
         }
     }
-
-
-
 
 }

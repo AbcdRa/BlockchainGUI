@@ -1,6 +1,6 @@
 package abcdra.wallet;
 
-import abcdra.crypt.util.CryptUtil;
+import abcdra.util.CryptUtil;
 import com.starkbank.ellipticcurve.PrivateKey;
 import com.starkbank.ellipticcurve.PublicKey;
 import com.starkbank.ellipticcurve.utils.Base64;

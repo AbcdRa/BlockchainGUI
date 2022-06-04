@@ -1,7 +1,7 @@
 package abcdra.net.server;
 
 import abcdra.blockchain.Blockchain;
-import abcdra.net.JLogger;
+import abcdra.util.JLogger;
 
 import java.io.IOException;
 import java.net.ServerSocket;

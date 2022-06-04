@@ -14,7 +14,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static abcdra.app.AppUtil.*;
+import static abcdra.util.AppUtil.*;
 
 public class AppTxCreator {
     App app;

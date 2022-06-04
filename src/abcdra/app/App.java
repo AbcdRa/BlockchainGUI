@@ -3,7 +3,7 @@ package abcdra.app;
 import abcdra.blockchain.Blockchain;
 import abcdra.blockchain.TransactionInfo;
 import abcdra.net.ComplexData;
-import abcdra.net.JLogger;
+import abcdra.util.JLogger;
 import abcdra.net.client.NodeClient;
 import abcdra.net.server.NodeServer;
 import abcdra.transaction.TxInput;
@@ -18,12 +18,6 @@ import java.util.concurrent.Exchanger;
 
 
 public class App {
-    //TODO Добавить Вкладку на изменение конфигов
-    //TODO Исправить баг двойного добавления UTXO
-    //TODO Добавить возможность по двойному клику на вход найти начальный выход
-    //TODO Добавить возможность по двойному клику на выход найти потраченный вход
-    //TODO Ошибки поиска конфига
-
 
     private JPanel mainJPanel;
     protected JButton bCreateWallet;
